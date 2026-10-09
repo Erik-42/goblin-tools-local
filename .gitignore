@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+
+# 本地 API 配置（含密钥，绝不入库）
+goblin-settings.json
+server/settings.json
+
+# PyInstaller 产物
+build/
+dist/
+*.spec
+GoblinTools.exe
