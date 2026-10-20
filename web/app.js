@@ -86,7 +86,7 @@ const TOOLS = {
     fields: [{ name: "task", label: "Que veux-tu faire ?", type: "textarea", placeholder: "Par exemple : organiser l'anniversaire d'un ami" }],
     endpoint: "/api/magic-todo",
     resultInput: (v) => v.task,
-    render: renderSteps, withActions: true,
+    history: true,
   },
   formalizer: {
     icon: "✍️", name: "Formalizer", desc: "Réécrit un texte dans le ton choisi",
@@ -194,36 +194,21 @@ const HOME_CARDS = [
   ["professor"], ["consultant"], ["estimator"], ["compiler"], ["chef"],
 ];
 
-/* ============================ étapes et listes ============================ */
-function renderSteps(r) {
-  return `<div class="result"><h2>Découpage</h2>
-    <ul class="step-list">${r.steps.map((s, i) => `
-      <li class="step"><b>${i + 1}. ${esc(s.text)}</b>
-        ${s.substeps.map((ss) => `<div class="substep">${esc(ss)}</div>`).join("")}</li>`).join("")}</ul>
-    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn secondary small" id="btn-save-list">💾 Enregistrer la liste</button>
-      <button class="btn small" id="btn-focus">⏯️ Focus avec Taskmaster</button>
-    </div></div>`;
+/* ============================ listes vers Taskmaster ============================ */
+function saveTodoList(taskText, steps) {
+  const lists = loadJSON(LS_LISTS, []);
+  lists.unshift({ id: Date.now(), name: taskText, steps, created: Date.now() });
+  saveJSON(LS_LISTS, lists.slice(0, 30));
+  toast("Liste enregistrée ✅");
 }
 
-function bindStepsActions(steps, taskText) {
-  const saveBtn = document.getElementById("btn-save-list");
-  const focusBtn = document.getElementById("btn-focus");
-  const flat = steps.map((s) => ({ text: s.text, substeps: s.substeps }));
-  if (saveBtn) saveBtn.onclick = () => {
-    const lists = loadJSON(LS_LISTS, []);
-    lists.unshift({ id: Date.now(), name: taskText, steps: flat, created: Date.now() });
-    saveJSON(LS_LISTS, lists.slice(0, 30));
-    toast("Liste enregistrée ✅");
-  };
-  if (focusBtn) focusBtn.onclick = () => {
-    const lists = loadJSON(LS_LISTS, []);
-    const item = { id: Date.now(), name: taskText, steps: flat, created: Date.now() };
-    lists.unshift(item);
-    saveJSON(LS_LISTS, lists.slice(0, 30));
-    saveJSON(LS_FOCUS, { listId: item.id, idx: 0, done: 0, skipped: 0 });
-    location.hash = "#/taskmaster";
-  };
+function focusTodoList(taskText, steps) {
+  const lists = loadJSON(LS_LISTS, []);
+  const item = { id: Date.now(), name: taskText, steps, created: Date.now() };
+  lists.unshift(item);
+  saveJSON(LS_LISTS, lists.slice(0, 30));
+  saveJSON(LS_FOCUS, { listId: item.id, idx: 0, done: 0, skipped: 0 });
+  location.hash = "#/taskmaster";
 }
 
 /* ============================ page d'un outil ============================ */
@@ -243,7 +228,29 @@ function renderToolPage(tool) {
         </div>`).join("")}
       <button class="btn" type="submit">Lancer ✨</button>
     </form>
-    <div id="out"></div>`;
+    <div id="out"></div>
+    ${tool.history ? `<div id="todo-history"></div>` : ""}`;
+
+  function recallTodo(entry) {
+    const field = document.querySelector('#tool-form [name="task"]');
+    if (field) field.value = entry.task;
+    showTodo(entry);
+  }
+
+  function showTodo(entry) {
+    const out = document.getElementById("out");
+    MagicTodo.mountResult(out, entry, {
+      onSave: saveTodoList,
+      onFocus: focusTodoList,
+      onChange() {
+        MagicTodo.mountHistory(document.getElementById("todo-history"), entry.id, recallTodo);
+      },
+    });
+    MagicTodo.mountHistory(document.getElementById("todo-history"), entry.id, recallTodo);
+    out.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  if (tool.history) MagicTodo.mountHistory(document.getElementById("todo-history"), null, recallTodo);
 
   document.getElementById("tool-form").onsubmit = async (e) => {
     e.preventDefault();
@@ -259,9 +266,9 @@ function renderToolPage(tool) {
     const body = tool.buildBody ? tool.buildBody(values) : values;
     try {
       const result = await apiCall(tool.endpoint, body);
-      out.innerHTML = tool.render(result);
       addHistory(tool.name, tool.resultInput(values), result);
-      if (tool.withActions) bindStepsActions(result.steps, values.task);
+      if (tool.history) showTodo(MagicTodo.remember(values.task, result.steps));
+      else out.innerHTML = tool.render(result);
     } catch (err) {
       out.innerHTML = `<div class="alert">⚠️ ${esc(err.message)}
         ${err.code === "not_configured" ? ' <a href="#/settings">Ouvrir les réglages →</a>' : ""}</div>`;

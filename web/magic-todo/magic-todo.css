@@ -1,0 +1,92 @@
+.magic-todo__result { margin-top: 26px; }
+
+.magic-todo__title { font-size: 1.1rem; margin: 0 0 8px; }
+
+.magic-todo__progress { margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; }
+
+.magic-todo__steps { list-style: none; padding: 0; margin: 0; }
+
+.magic-todo__step {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.magic-todo__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.magic-todo__box {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0.25rem 0 0;
+  accent-color: var(--green);
+  flex: none;
+}
+
+.magic-todo__label { font-weight: 700; }
+
+.magic-todo__step--done .magic-todo__label,
+.magic-todo__step--done .magic-todo__sub {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.magic-todo__sub {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin-top: 6px;
+  padding-left: 1.85rem;
+  position: relative;
+}
+
+.magic-todo__sub::before {
+  content: "·";
+  position: absolute;
+  left: 0.35rem;
+}
+
+.magic-todo__actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.magic-todo__history { margin-top: 28px; }
+
+.magic-todo__recalls { display: flex; flex-direction: column; gap: 8px; }
+
+.magic-todo__recall {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.magic-todo__recall:hover { border-color: var(--green); }
+
+.magic-todo__recall--active {
+  border-color: var(--green);
+  background: var(--green-light);
+}
+
+.magic-todo__recall-task { font-weight: 700; }
+
+.magic-todo__recall-meta { color: var(--muted); font-size: 0.82rem; }
+
+.magic-todo__empty { color: var(--muted); margin: 0; }
