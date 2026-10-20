@@ -1,119 +1,122 @@
 <div align="center">
 
-# 👺 Goblin Tools 本地版
+# 👺 Goblin Tools — édition locale
 
-**当事情显得太大、太复杂时，小精灵帮你一把。**
+**Quand ça paraît trop grand, trop compliqué, le gobelin te file un coup de main.**
 
-用 AI 把任务拆解成可执行的小步骤 — 9 个日常效率工具，全部本地运行，数据不出你的电脑。
+L'IA découpe les tâches en petites étapes faisables — 9 outils du quotidien, tous en local, les données ne quittent pas ton ordinateur.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-2e9e6b?logo=python&logoColor=white)
-![Dependencies](https://img.shields.io/badge/前端零依赖-HTML%2FCSS%2FJS-f1c40f)
+![Dépendances](https://img.shields.io/badge/front_sans_build-HTML%2FCSS%2FJS-f1c40f)
 ![Platform](https://img.shields.io/badge/Windows-x64-0078d4?logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-2e9e6b)
-![Privacy](https://img.shields.io/badge/隐私-数据只在你电脑上-blueviolet)
+![Confidentialité](https://img.shields.io/badge/confidentialit%C3%A9-donn%C3%A9es_locales-blueviolet)
 
-灵感来自 [goblin.tools](https://goblin.tools)（面向 ADHD / 神经多样性人群的任务拆解工具），
-完全重写为本机应用：一个 exe 或三个 Python 包即可跑起全部功能。
+Inspiré de [goblin.tools](https://goblin.tools) (outils de découpage de tâches pensés pour le TDAH et la neurodiversité),
+réécrit en application locale : un exe, ou trois paquets Python, suffisent pour tout lancer.
 
 </div>
 
-## 界面一览
+## Aperçu
 
-| 首页 · 9 个工具一屏直达 | Magic ToDo · 拆解出可勾选的小步骤 | 设置 · 一次配置任意 OpenAI 兼容模型 |
+| Accueil · les 9 outils d'un coup | Magic ToDo · des étapes à cocher | Réglages · n'importe quel modèle compatible OpenAI |
 |---|---|---|
-| ![首页](docs/home.png) | ![Magic ToDo](docs/magic-todo.png) | ![设置](docs/settings.png) |
+| ![Accueil](docs/home.png) | ![Magic ToDo](docs/magic-todo.png) | ![Réglages](docs/settings.png) |
 
-## ✨ 工具集
+Un bouton lune / soleil dans la barre passe en mode sombre. Sans choix enregistré, le thème suit celui du système. Le choix est mémorisé dans le navigateur.
 
-| 工具 | 干什么用 |
+## ✨ Les outils
+
+| Outil | À quoi il sert |
 |---|---|
-| ✅ **Magic ToDo** | 把「准备一场生日派对」这样的大任务，一键拆成 3~8 个马上能动手的小步骤 |
-| ⏯️ **Taskmaster** | 一次屏幕上只出现一个步骤——做完打勾才放下一个，专治任务列表焦虑 |
-| ✍️ **Formalizer** | 把随口写的大白话改写成友好 / 专业 / 道歉 / 热情等 7 种语气 |
-| ⚖️ **Judge** | 拿不准对方消息的真实态度？贴进来，分析其中隐含的情绪 |
-| 🎓 **Professor** | 从「给 6 岁小孩讲」到「专家水平」，四档深度解释任何主题 |
-| 💡 **Consultant** | 纠结时列出候选项，逐条摆出利弊并给出建议 |
-| ⏱️ **Estimator** | 人总是低估任务时间——它把子任务逐项估给你看，宁高勿低 |
-| 🧠 **Compiler** | 把头脑风暴的碎念「编译」成分类清晰的行动项清单 |
-| 👨‍🍳 **Chef** | 报出手头食材，生成不用额外买菜的家常食谱 |
+| ✅ **Magic ToDo** | Une grosse tâche du type « organiser un anniversaire » devient, en un clic, 3 à 8 petites étapes à faire tout de suite |
+| ⏯️ **Taskmaster** | Une seule étape à l'écran — on coche, et la suivante arrive. Contre l'angoisse de la liste |
+| ✍️ **Formalizer** | Réécrit un texte parlé en 7 tons : amical, professionnel, excuses, enthousiaste… |
+| ⚖️ **Judge** | Un message dont tu n'es pas sûr du ton ? Colle-le, l'outil en sort les émotions implicites |
+| 🎓 **Professor** | Du « comme à un enfant de 6 ans » au niveau expert, quatre profondeurs pour n'importe quel sujet |
+| 💡 **Consultant** | Quand tu hésites : liste les options, avantages et inconvénients, puis une recommandation |
+| ⏱️ **Estimator** | On sous-estime toujours la durée — il détaille chaque sous-tâche, plutôt trop haut que trop bas |
+| 🧠 **Compiler** | « Compile » un brainstorm en vrac en une liste d'actions classées |
+| 👨‍🍳 **Chef** | Tu donnes les ingrédients sous la main, il propose des recettes sans courses en plus |
 
-ToDo 与 Taskmaster 打通：拆解结果可保存为清单，一键进入「聚焦模式」逐步推进。
+ToDo et Taskmaster sont reliés : le découpage se sauvegarde en liste, puis le mode focus avance étape par étape.
 
-## 🚀 快速开始
+## 🚀 Démarrage
 
-### 方式一：下载 exe（推荐，免装任何东西）
+### Option 1 : télécharger l'exe (recommandé, rien à installer)
 
-到 [Releases](../../releases) 下载 `GoblinTools.exe`（约 16 MB，单文件），**双击即用**——
-自动在本机启动服务并打开浏览器。关掉控制台窗口即停止。
+Va dans [Releases](../../releases), télécharge `GoblinTools.exe` (environ 16 Mo, un seul fichier), **double-clique** —
+le service démarre en local et le navigateur s'ouvre. Fermer la fenêtre de console arrête tout.
 
-### 方式二：源码运行
+### Option 2 : lancer les sources
 
 ```bash
 git clone https://github.com/lwjyzw/goblin-tools-local.git
 cd goblin-tools-local
-# Windows: 双击 start.bat（首次自动装依赖）
-# 手动:
+# Windows : double-clic sur start.bat (les dépendances s'installent au premier lancement)
+# À la main :
 pip install -r requirements.txt
 python run.py          # → http://127.0.0.1:8765
 ```
 
-### 首次使用：配置模型（1 分钟）
+### Première utilisation : configurer le modèle (1 minute)
 
-打开 <http://127.0.0.1:8765> → 右上角 ⚙️ 设置 → 填入任一家 OpenAI 兼容接口 →
-点「测试连通性」→ 完成。
+Ouvre <http://127.0.0.1:8765> → ⚙️ en haut à droite → Réglages → renseigne une API compatible OpenAI →
+clique sur « Tester la connexion » → c'est prêt.
 
-| 服务商 | Base URL | 模型名 |
+| Fournisseur | URL de base | Nom du modèle |
 |---|---|---|
 | DeepSeek | `https://api.deepseek.com/v1` | `deepseek-chat` |
-| 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus` |
+| Qwen | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus` |
 | Kimi | `https://api.moonshot.cn/v1` | `moonshot-v1-8k` |
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
 
-## 🔒 隐私
+## 🔒 Confidentialité
 
-- 除你配置的那一个模型接口外，应用**不与任何第三方通信**——无统计、无埋点、无账户系统
-- API 配置存在本机（exe 旁 `goblin-settings.json`）；历史记录与清单只存在浏览器 localStorage
-- 手机与电脑同一局域网时，手机浏览器直接访问电脑 IP:8765 也能用（界面已做响应式）
+- En dehors de l'API de modèle que tu configures, l'application **ne contacte aucun tiers** — pas de statistiques, pas de traceur, pas de compte
+- La configuration API est sur la machine (fichier `goblin-settings.json` à côté de l'exe) ; l'historique et les listes restent dans le localStorage du navigateur
+- Le thème (clair ou sombre) est lui aussi stocké dans le navigateur
+- Téléphone et ordinateur sur le même réseau : le navigateur du téléphone peut ouvrir l'IP de l'ordinateur sur le port 8765 (l'interface est responsive)
 
-## 🏗️ 技术栈与结构
+## 🏗️ Stack et structure
 
-刻意选零构建步骤的方案：**后端只有 3 个 Python 包，前端没有任何框架**。
+Choix assumé, zéro étape de build : **3 paquets Python côté serveur, aucun framework côté front**.
 
 ```
 goblin-app/
-├─ GoblinTools.exe        # PyInstaller 单文件产物（不入库，见 Releases）
-├─ run.py                 # 入口：起服务 + 自动开浏览器 + 端口占用自动顺延
+├─ GoblinTools.exe        # binaire PyInstaller (hors dépôt, voir Releases)
+├─ run.py                 # entrée : serveur + navigateur + port suivant si 8765 est pris
 ├─ server/
-│  ├─ main.py             # FastAPI 路由 + 静态托管
-│  ├─ tools.py            # 9 个工具的提示词模板与 JSON 解析
-│  ├─ llm.py              # OpenAI 兼容 chat 客户端（httpx）
-│  ├─ paths.py            # 源码 / exe 双模式路径
-│  └─ settings_store.py   # 配置读写
-├─ web/                   # 原生 HTML/CSS/JS 单页应用（自写 hash 路由）
-└─ test/mock_llm.py       # 假模型服务：不花 API 钱跑通端到端测试
+│  ├─ main.py             # routes FastAPI + fichiers statiques
+│  ├─ tools.py            # prompts des 9 outils et parsing JSON
+│  ├─ llm.py              # client chat compatible OpenAI (httpx)
+│  ├─ paths.py            # chemins source / exe
+│  └─ settings_store.py   # lecture et écriture de la config
+├─ web/                   # SPA HTML/CSS/JS (routage hash maison)
+└─ test/mock_llm.py       # faux modèle : tests de bout en bout sans dépenser de crédit API
 ```
 
-### 重新打包 exe
+### Reconstruire l'exe
 
 ```bash
 pip install pyinstaller
 python -m PyInstaller --noconfirm --onefile --console --name GoblinTools \
   --add-data "web;web" --collect-all uvicorn run.py
-# 产物在 dist/GoblinTools.exe
+# le binaire est dans dist/GoblinTools.exe
 ```
 
-### 本地开发
+### Développement local
 
 ```bash
-python -m uvicorn server.main:app --port 8765 --reload   # 改代码即时生效
-python test/mock_llm.py                                   # 离线联调用的假模型
+python -m uvicorn server.main:app --port 8765 --reload   # rechargement à chaque modification
+python test/mock_llm.py                                   # faux modèle pour travailler hors ligne
 ```
 
-## 🙏 致谢
+## 🙏 Remerciements
 
-- [Goblin Tools](https://goblin.tools) — 产品理念与工具形态的原创者
-- FastAPI / uvicorn / httpx / PyInstaller — 让「Python 项目 → 双击 exe」只有 16 MB 的距离
+- [Goblin Tools](https://goblin.tools) — l'idée produit et la forme des outils
+- FastAPI / uvicorn / httpx / PyInstaller — le chemin « projet Python → double-clic sur un exe » tient en 16 Mo
 
-## 📄 License
+## 📄 Licence
 
 [MIT](LICENSE)

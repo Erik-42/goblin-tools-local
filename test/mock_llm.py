@@ -9,18 +9,18 @@ class Handler(BaseHTTPRequestHandler):
         user = body["messages"][-1]["content"]
         reply = json.dumps({
             "steps": [
-                {"text": f"测试步骤一（收到：{user[:20]}）", "substeps": ["子步骤 A"]},
-                {"text": "测试步骤二", "substeps": []},
+                {"text": f"Étape de test 1 (reçu : {user[:20]})", "substeps": ["Sous-étape A"]},
+                {"text": "Étape de test 2", "substeps": []},
             ],
-            "text": "测试改写结果", "summary": "总体判断", "tone": "中性",
-            "emotions": [{"name": "焦虑", "evidence": "例子"}],
-            "points": [{"title": "要点", "body": "解释"}],
-            "options": [{"name": "选项甲", "pros": ["好"], "cons": ["坏"]}],
-            "recommendation": "推荐甲",
-            "items": [{"text": "洗澡", "minutes": 20}, {"text": "收拾", "minutes": 15}],
+            "text": "Texte réécrit de test", "summary": "Jugement général", "tone": "neutre",
+            "emotions": [{"name": "anxiété", "evidence": "exemple"}],
+            "points": [{"title": "Point clé", "body": "Explication"}],
+            "options": [{"name": "Option A", "pros": ["avantage"], "cons": ["inconvénient"]}],
+            "recommendation": "Je recommande A",
+            "items": [{"text": "prendre une douche", "minutes": 20}, {"text": "ranger", "minutes": 15}],
             "total_minutes": 35,
-            "actions": [{"text": "给妈妈打电话", "category": "家庭"}],
-            "recipes": [{"name": "番茄炒蛋", "description": "经典", "ingredients": ["番茄"], "steps": ["切", "炒"]}],
+            "actions": [{"text": "appeler maman", "category": "famille"}],
+            "recipes": [{"name": "œufs brouillés aux tomates", "description": "classique", "ingredients": ["tomate"], "steps": ["couper", "cuire"]}],
         }, ensure_ascii=False)
         out = {"choices": [{"message": {"content": reply}}]}
         data = json.dumps(out, ensure_ascii=False).encode()

@@ -1,27 +1,37 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Goblin Tools 本地版</title>
+  <title>Goblin Tools — édition locale</title>
   <link rel="stylesheet" href="/style.css" />
+  <script>
+    (function () {
+      var saved = localStorage.getItem("gt_theme");
+      var theme = saved === "light" || saved === "dark"
+        ? saved
+        : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
 </head>
 <body>
   <header class="topbar">
     <a href="#/" class="brand">
       <span class="logo">👺</span>
-      <span class="brand-text">Goblin Tools<span class="brand-sub">本地版</span></span>
+      <span class="brand-text">Goblin Tools<span class="brand-sub">local</span></span>
     </a>
     <nav class="nav">
-      <a href="#/history" title="历史">🕘</a>
-      <a href="#/settings" title="设置">⚙️</a>
+      <button type="button" id="theme-toggle" class="theme-toggle" title="Passer au mode sombre" aria-label="Passer au mode sombre" aria-pressed="false">🌙</button>
+      <a href="#/history" title="Historique">🕘</a>
+      <a href="#/settings" title="Réglages">⚙️</a>
     </nav>
   </header>
 
   <main id="app" class="container"></main>
 
   <footer class="foot">
-    <span>当事情显得太大、太复杂时 · 灵感来自 goblin.tools</span>
+    <span>Quand ça paraît trop grand, trop compliqué · inspiré de goblin.tools</span>
   </footer>
 
   <div id="toast" class="toast" hidden></div>

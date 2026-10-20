@@ -30,8 +30,8 @@ def open_browser_later(url: str) -> None:
 def main() -> None:
     port = pick_port(PREFERRED_PORT)
     url = f"http://127.0.0.1:{port}"
-    print(f"Goblin Tools 本地版  ->  {url}")
-    print("关闭此窗口即停止服务。")
+    print(f"Goblin Tools — édition locale  ->  {url}")
+    print("Ferme cette fenêtre pour arrêter le service.")
     open_browser_later(url)
     uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
 

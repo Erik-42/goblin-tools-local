@@ -2,11 +2,11 @@
 __pycache__/
 *.pyc
 
-# 本地 API 配置（含密钥，绝不入库）
+# Configuration API locale (contient la clé, ne jamais la versionner)
 goblin-settings.json
 server/settings.json
 
-# PyInstaller 产物
+# Artefacts PyInstaller
 build/
 dist/
 *.spec

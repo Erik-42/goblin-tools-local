@@ -24,7 +24,7 @@ async def llm_error_handler(request: Request, exc: llm.LLMError):
 async def get_settings():
     s = settings_store.load()
     key = s.get("api_key", "")
-    masked = (key[:4] + "…" + key[-4:]) if len(key) > 12 else ("已设置" if key else "")
+    masked = (key[:4] + "…" + key[-4:]) if len(key) > 12 else ("définie" if key else "")
     return {
         "base_url": s["base_url"],
         "model": s["model"],
@@ -42,7 +42,7 @@ async def put_settings(data: dict):
 
 @app.post("/api/settings/test")
 async def test_settings():
-    reply = await llm.chat("你是一个测试助手。", "回复一个字：好", temperature=0)
+    reply = await llm.chat("Tu es un assistant de test.", "Réponds par un seul mot : oui", temperature=0)
     return {"ok": True, "reply": reply.strip()[:50]}
 
 
@@ -51,7 +51,7 @@ async def test_settings():
 async def run_tool(tool_name: str, request: Request):
     handler = tools.TOOLS.get(tool_name)
     if handler is None:
-        return JSONResponse(status_code=404, content={"detail": f"未知工具：{tool_name}"})
+        return JSONResponse(status_code=404, content={"detail": f"Outil inconnu : {tool_name}"})
     try:
         data = await request.json()
     except Exception:

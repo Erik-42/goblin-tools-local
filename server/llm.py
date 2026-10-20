@@ -19,7 +19,7 @@ async def chat(system: str, user: str, temperature: float = 0.7) -> str:
     settings = settings_store.load()
     api_key = settings.get("api_key", "")
     if not api_key:
-        raise LLMNotConfigured("尚未配置 API Key，请打开「设置」填入 Base URL、API Key 和模型名。")
+        raise LLMNotConfigured("Aucune clé API. Ouvre « Réglages » et renseigne l'URL de base, la clé API et le nom du modèle.")
 
     base = settings["base_url"].rstrip("/")
     url = f"{base}/chat/completions"
@@ -37,16 +37,16 @@ async def chat(system: str, user: str, temperature: float = 0.7) -> str:
         async with httpx.AsyncClient(timeout=90) as client:
             resp = await client.post(url, json=payload, headers=headers)
     except httpx.HTTPError as exc:
-        raise LLMError(f"无法连接到模型接口：{exc}") from exc
+        raise LLMError(f"Impossible de joindre l'API du modèle : {exc}") from exc
 
     if resp.status_code != 200:
-        raise LLMError(f"模型接口返回 {resp.status_code}：{resp.text[:300]}")
+        raise LLMError(f"L'API du modèle a répondu {resp.status_code} : {resp.text[:300]}")
 
     try:
         data = resp.json()
         content = data["choices"][0]["message"]["content"]
     except (ValueError, KeyError, IndexError) as exc:
-        raise LLMError(f"模型返回格式异常：{str(data)[:300]}") from exc
+        raise LLMError(f"Format de réponse inattendu : {resp.text[:300]}") from exc
     return content or ""
 
 
@@ -68,4 +68,4 @@ def parse_json(text: str):
             return json.loads(candidate)
         except json.JSONDecodeError:
             continue
-    raise LLMError("模型没有按要求返回 JSON，请重试或更换模型。原始输出：" + text[:200])
+    raise LLMError("Le modèle n'a pas renvoyé de JSON. Réessaie ou change de modèle. Sortie brute : " + text[:200])
