@@ -43,7 +43,28 @@
   }
 
   function item(text) {
-    return { id: uid(), text: String(text || "").trim(), done: false, deadline: "", minutes: null, subtasks: [] };
+    return {
+      id: uid(),
+      text: String(text || "").trim(),
+      done: false,
+      open: true,
+      deadline: "",
+      minutes: null,
+      subtasks: [],
+    };
+  }
+
+  function normalizeNode(row) {
+    if (!row || !String(row.text || "").trim()) return null;
+    return {
+      id: row.id || uid(),
+      text: String(row.text || "").trim(),
+      done: !!row.done,
+      open: row.open !== false,
+      deadline: row.deadline || "",
+      minutes: Number.isFinite(Number(row.minutes)) ? Number(row.minutes) : null,
+      subtasks: (row.subtasks || []).map(normalizeNode).filter(Boolean),
+    };
   }
 
   function blank() {
@@ -57,18 +78,7 @@
       if (!data || !Array.isArray(data.tabs) || !data.tabs.length) return blank();
       data.spice = Spice.clamp(data.spice);
       data.tabs.forEach((tab) => {
-        tab.items = (tab.items || []).map((row) => ({
-          id: row.id || uid(),
-          text: String(row.text || ""),
-          done: !!row.done,
-          deadline: row.deadline || "",
-          minutes: Number.isFinite(Number(row.minutes)) ? Number(row.minutes) : null,
-          subtasks: (row.subtasks || []).map((sub) => ({
-            id: sub.id || uid(),
-            text: String(sub.text || ""),
-            done: !!sub.done,
-          })).filter((sub) => sub.text),
-        })).filter((row) => row.text);
+        tab.items = (tab.items || []).map(normalizeNode).filter(Boolean);
       });
       if (!data.tabs.some((tab) => tab.id === data.activeId)) data.activeId = data.tabs[0].id;
       return data;
@@ -154,9 +164,97 @@
     return state.tabs.find((tab) => tab.id === state.activeId) || state.tabs[0];
   }
 
+  function walk(nodes, visit) {
+    for (const row of nodes || []) {
+      if (visit(row) === false) return false;
+      if (walk(row.subtasks, visit) === false) return false;
+    }
+    return true;
+  }
+
   function findItem(state, itemId) {
-    const tab = activeTab(state);
-    return tab.items.find((row) => row.id === itemId) || null;
+    let found = null;
+    walk(activeTab(state).items, (row) => {
+      if (row.id === itemId) {
+        found = row;
+        return false;
+      }
+    });
+    return found;
+  }
+
+  function findInTab(tab, itemId) {
+    let found = null;
+    walk(tab.items, (row) => {
+      if (row.id === itemId) {
+        found = row;
+        return false;
+      }
+    });
+    return found;
+  }
+
+  function removeItem(list, itemId) {
+    const index = list.findIndex((row) => row.id === itemId);
+    if (index !== -1) {
+      list.splice(index, 1);
+      return true;
+    }
+    return list.some((row) => removeItem(row.subtasks, itemId));
+  }
+
+  function listLine(row, depth) {
+    const pad = "  ".repeat(depth);
+    const head = `${pad}${row.done ? "[x]" : "[ ]"} ${row.text}`;
+    const kids = (row.subtasks || []).map((sub) => listLine(sub, depth + 1));
+    return [head, ...kids].join("\n");
+  }
+
+  function leaves(items) {
+    const out = [];
+    walk(items, (row) => {
+      if (!(row.subtasks || []).length) {
+        out.push({
+          text: row.text,
+          done: row.done,
+          substeps: [],
+          itemId: row.id,
+        });
+      }
+    });
+    return out;
+  }
+
+  function renderNode(row, keepId, keepText, depth) {
+    const hasKids = !!(row.subtasks && row.subtasks.length);
+    const open = row.open !== false;
+    return `
+      <li class="magic-todo__item${row.done ? " magic-todo__item--done" : ""}${busyId === row.id ? " magic-todo__item--busy" : ""}${depth ? " magic-todo__item--nested" : ""}" ${depth ? "" : 'draggable="true"'} data-id="${row.id}" style="--depth:${depth}">
+        ${hasKids
+          ? `<button class="magic-todo__twist" type="button" data-twist="${row.id}" aria-expanded="${open}" aria-label="${open ? "Refermer" : "Déployer"}">${open ? "▾" : "▸"}</button>`
+          : `<span class="magic-todo__twist magic-todo__twist--empty" aria-hidden="true"></span>`}
+        ${depth ? "" : `<span class="magic-todo__handle" aria-hidden="true">⋮⋮</span>`}
+        <input class="magic-todo__box" type="checkbox" data-check="${row.id}" ${row.done ? "checked" : ""} aria-label="Fait">
+        ${keepId === row.id
+          ? `<input class="magic-todo__edit" data-edit="${row.id}" value="${esc(keepText || row.text)}">`
+          : `<span class="magic-todo__text">${esc(row.text)}</span>`}
+        ${row.minutes ? `<span class="magic-todo__time">≈ ${esc(fmtMinutes(row.minutes))}</span>` : ""}
+        ${row.deadline ? `<span class="magic-todo__deadline">${esc(row.deadline)}</span>` : ""}
+        <button class="magic-todo__icon" type="button" data-break="${row.id}" aria-label="Découper cet élément">⤵</button>
+        <div class="magic-todo__menu-wrap">
+          <button class="magic-todo__icon" type="button" data-options="${row.id}" aria-label="Options de la tâche" aria-expanded="${openMenu === row.id}">⋯</button>
+          <div class="magic-todo__menu" ${openMenu === row.id ? "" : "hidden"}>
+            <button type="button" data-act="estimate" data-id="${row.id}">Estimer</button>
+            <button type="button" data-act="deadline" data-id="${row.id}">Ajouter une échéance</button>
+            <button type="button" data-act="edit" data-id="${row.id}">Modifier</button>
+            <button type="button" data-act="subtask" data-id="${row.id}">Ajouter une sous-tâche</button>
+            <button type="button" data-act="remove" data-id="${row.id}">Retirer</button>
+          </div>
+        </div>
+        ${openMenu === "deadline-" + row.id ? `<input class="magic-todo__date" type="date" data-date="${row.id}" value="${esc(row.deadline)}">` : ""}
+        ${openMenu === "sub-" + row.id ? `<form class="magic-todo__subform" data-subform="${row.id}"><input type="text" placeholder="Sous-tâche" required><button class="btn small" type="submit">Ajouter</button></form>` : ""}
+        ${hasKids && open ? `<ul class="magic-todo__subs">${row.subtasks.map((sub) => renderNode(sub, keepId, keepText, depth + 1)).join("")}</ul>` : ""}
+      </li>`;
   }
 
   let state = load();
@@ -181,11 +279,7 @@
   }
 
   function listText(tab) {
-    return tab.items.map((row) => {
-      const subs = row.subtasks.map((sub) => `  - ${sub.done ? "[x]" : "[ ]"} ${sub.text}`).join("\n");
-      const head = `${row.done ? "[x]" : "[ ]"} ${row.text}`;
-      return subs ? `${head}\n${subs}` : head;
-    }).join("\n");
+    return tab.items.map((row) => listLine(row, 0)).join("\n");
   }
 
   function groups() {
@@ -209,7 +303,7 @@
           </div>
           <div class="tool-help">
             <button class="tool-help__toggle" type="button" aria-expanded="false">Aide ?</button>
-            <p class="tool-help__text" hidden>Ajoute une tâche, coche-la quand elle est faite, ou découpe-la. Le piquant règle le niveau de détail de tous les découpages. Les modèles sont des listes prêtes, enregistrées dans ce navigateur.</p>
+            <p class="tool-help__text" hidden>Ajoute une tâche, coche-la, ou découpe-la. Chaque sous-tâche se découpe de la même façon. Le triangle déploie ou referme. Le piquant règle le niveau de détail.</p>
           </div>
         </div>
         <form class="magic-todo__add" id="todo-add">
@@ -237,34 +331,7 @@
           <button class="btn secondary small" type="button" id="todo-redo" ${redo.length ? "" : "disabled"} aria-label="Rétablir">↪</button>
         </div>
         <ul class="magic-todo__items">
-          ${tab.items.map((row) => `
-            <li class="magic-todo__item${row.done ? " magic-todo__item--done" : ""}${busyId === row.id ? " magic-todo__item--busy" : ""}" draggable="true" data-id="${row.id}">
-              <span class="magic-todo__handle" aria-hidden="true">⋮⋮</span>
-              <input class="magic-todo__box" type="checkbox" data-check="${row.id}" ${row.done ? "checked" : ""} aria-label="Fait">
-              ${keepId === row.id
-                ? `<input class="magic-todo__edit" data-edit="${row.id}" value="${esc(keepText || row.text)}">`
-                : `<span class="magic-todo__text">${esc(row.text)}</span>`}
-              ${row.minutes ? `<span class="magic-todo__time">≈ ${esc(fmtMinutes(row.minutes))}</span>` : ""}
-              ${row.deadline ? `<span class="magic-todo__deadline">${esc(row.deadline)}</span>` : ""}
-              <button class="magic-todo__icon" type="button" data-break="${row.id}" aria-label="Découper cet élément">⤵</button>
-              <div class="magic-todo__menu-wrap">
-                <button class="magic-todo__icon" type="button" data-options="${row.id}" aria-label="Options de la tâche" aria-expanded="${openMenu === row.id}">⋯</button>
-                <div class="magic-todo__menu" ${openMenu === row.id ? "" : "hidden"}>
-                  <button type="button" data-act="estimate" data-id="${row.id}">Estimer</button>
-                  <button type="button" data-act="deadline" data-id="${row.id}">Ajouter une échéance</button>
-                  <button type="button" data-act="edit" data-id="${row.id}">Modifier</button>
-                  <button type="button" data-act="subtask" data-id="${row.id}">Ajouter une sous-tâche</button>
-                  <button type="button" data-act="remove" data-id="${row.id}">Retirer</button>
-                </div>
-              </div>
-              ${row.subtasks.length ? `<ul class="magic-todo__subs">${row.subtasks.map((sub) => `
-                <li class="magic-todo__subitem${sub.done ? " magic-todo__item--done" : ""}">
-                  <input class="magic-todo__box" type="checkbox" data-sub="${row.id}" data-sub-id="${sub.id}" ${sub.done ? "checked" : ""}>
-                  <span>${esc(sub.text)}</span>
-                </li>`).join("")}</ul>` : ""}
-              ${openMenu === "deadline-" + row.id ? `<input class="magic-todo__date" type="date" data-date="${row.id}" value="${esc(row.deadline)}">` : ""}
-              ${openMenu === "sub-" + row.id ? `<form class="magic-todo__subform" data-subform="${row.id}"><input type="text" placeholder="Sous-tâche" required><button class="btn small" type="submit">Ajouter</button></form>` : ""}
-            </li>`).join("")}
+          ${tab.items.map((row) => renderNode(row, keepId, keepText, 0)).join("")}
         </ul>
         <dialog class="magic-todo__dialog" id="todo-dialog">
           <form method="dialog"><button class="magic-todo__close" value="cancel" aria-label="Fermer">×</button></form>
@@ -388,13 +455,13 @@
         commit(() => { findItem(state, Number(box.dataset.check)).done = box.checked; });
       };
     });
-    root.querySelectorAll("[data-sub]").forEach((box) => {
-      box.onchange = () => {
-        commit(() => {
-          const parent = findItem(state, Number(box.dataset.sub));
-          const sub = parent.subtasks.find((row) => row.id === Number(box.dataset.subId));
-          sub.done = box.checked;
-        });
+    root.querySelectorAll("[data-twist]").forEach((button) => {
+      button.onclick = () => {
+        const row = findItem(state, Number(button.dataset.twist));
+        if (!row) return;
+        row.open = !(row.open !== false);
+        persist();
+        paint();
       };
     });
     root.querySelectorAll("[data-options]").forEach((button) => {
@@ -424,7 +491,9 @@
         const text = form.elements[0].value.trim();
         if (!text) return;
         commit(() => {
-          findItem(state, Number(form.dataset.subform)).subtasks.push({ id: uid(), text, done: false });
+          const parent = findItem(state, Number(form.dataset.subform));
+          parent.subtasks.push(item(text));
+          parent.open = true;
           openMenu = null;
         });
       };
@@ -443,7 +512,7 @@
       });
       input.addEventListener("blur", finish);
     });
-    root.querySelectorAll(".magic-todo__item").forEach((row) => {
+    root.querySelectorAll('.magic-todo__item[draggable="true"]').forEach((row) => {
       row.addEventListener("dragstart", (event) => {
         event.dataTransfer.setData("text/plain", row.dataset.id);
       });
@@ -457,6 +526,7 @@
           const items = activeTab(state).items;
           const source = items.findIndex((entry) => entry.id === from);
           const target = items.findIndex((entry) => entry.id === to);
+          if (source < 0 || target < 0) return;
           const [moved] = items.splice(source, 1);
           items.splice(target, 0, moved);
         });
@@ -467,8 +537,7 @@
   async function act(name, id) {
     if (name === "remove") {
       commit(() => {
-        const tab = activeTab(state);
-        tab.items = tab.items.filter((row) => row.id !== id);
+        removeItem(activeTab(state).items, id);
         openMenu = null;
       });
       return;
@@ -476,11 +545,12 @@
     if (name === "edit") {
       openMenu = null;
       paint();
-      const row = root.querySelector(`[data-id="${id}"] .magic-todo__text`);
-      if (!row) return;
+      const li = root.querySelector(`.magic-todo__item[data-id="${id}"]`);
+      const label = li && li.querySelector(":scope > .magic-todo__text");
+      if (!label) return;
       const current = findItem(state, id);
-      row.outerHTML = `<input class="magic-todo__edit" data-edit="${id}" value="${esc(current.text)}">`;
-      const input = root.querySelector(".magic-todo__edit");
+      label.outerHTML = `<input class="magic-todo__edit" data-edit="${id}" value="${esc(current.text)}">`;
+      const input = li.querySelector(":scope > .magic-todo__edit");
       input.focus();
       let closed = false;
       const finish = () => {
@@ -526,11 +596,16 @@
     paint();
     try {
       const row = findItem(load(), id);
+      if (!row) throw new Error("Élément introuvable");
       const result = await apiCall("/api/magic-todo", { task: row.text, spice: state.spice });
       const steps = normalize(result.steps);
       commit(() => {
         const target = findItem(state, id);
-        target.subtasks = steps.flatMap((step) => [step.text, ...step.substeps]).filter(Boolean).map((text) => ({ id: uid(), text, done: false }));
+        target.subtasks = steps
+          .flatMap((step) => [step.text, ...step.substeps])
+          .filter(Boolean)
+          .map((text) => item(text));
+        target.open = true;
         busyId = null;
       });
       ToolHistory.remember("magic-todo", {
@@ -559,13 +634,13 @@
   function currentList() {
     state = load();
     const tab = activeTab(state);
-    return { id: tab.id, name: tab.name, items: tab.items };
+    return { id: tab.id, name: tab.name, items: tab.items, steps: leaves(tab.items) };
   }
 
   function markItem(tabId, itemId, done) {
     state = load();
     const tab = state.tabs.find((entry) => entry.id === tabId);
-    const row = tab && tab.items.find((entry) => entry.id === itemId);
+    const row = tab && findInTab(tab, itemId);
     if (!row) return;
     row.done = done;
     persist();

@@ -317,8 +317,8 @@ function renderToolPage(id) {
 /* ============================ Taskmaster (focus local) ============================ */
 function renderTaskmaster() {
   const board = MagicTodo.currentList();
-  const lists = board.items.length
-    ? [{ id: board.id, name: board.name, steps: board.items.map((row) => ({ text: row.text, done: row.done, substeps: row.subtasks.map((sub) => sub.text), itemId: row.id })) }]
+  const lists = (board.steps || []).length
+    ? [{ id: board.id, name: board.name, steps: board.steps }]
     : loadJSON(LS_LISTS, []);
   $app.innerHTML = `
     <p><a class="back" href="#/">← Tous les outils</a></p>
@@ -331,14 +331,14 @@ function renderTaskmaster() {
   ToolHelp.bind($app);
   const body = document.getElementById("tm-body");
 
-  if (board.items.length) {
+  if ((board.steps || []).length) {
     const previous = loadJSON(LS_FOCUS, null);
     if (!previous || previous.listId !== board.id) {
-      const pending = board.items.findIndex((row) => !row.done);
+      const pending = board.steps.findIndex((row) => !row.done);
       saveJSON(LS_FOCUS, {
         listId: board.id,
-        idx: pending === -1 ? board.items.length : pending,
-        done: board.items.filter((row) => row.done).length,
+        idx: pending === -1 ? board.steps.length : pending,
+        done: board.steps.filter((row) => row.done).length,
         skipped: 0,
       });
     }
@@ -434,7 +434,7 @@ async function renderSettings() {
   $app.innerHTML = `
     <p><a class="back" href="#/">← Tous les outils</a></p>
     <div class="tool-head"><span class="icon">⚙️</span><h1>Réglages</h1></div>
-    <p class="tool-desc">Configure une API compatible OpenAI (DeepSeek, Qwen, Kimi, OpenAI, etc.).</p>
+    <p class="tool-desc">En mode Ollama, le modèle suit <code>ia-choix</code>. Sinon, configure une API compatible OpenAI.</p>
     <div class="panel"><div id="set-loading" class="loading"><span class="spinner"></span>Lecture de la configuration…</div></div>`;
 
   let cur;
@@ -443,7 +443,12 @@ async function renderSettings() {
     return;
   }
 
+  const localNote = cur.source === "ia-choix" || cur.source === "ollama"
+    ? `<p class="tool-desc" style="margin-top:0">IA locale active : <b>${esc(cur.model)}</b>${cur.fallback ? ` · secours <b>${esc(cur.fallback)}</b>` : ""}${cur.loaded ? ` · en mémoire <b>${esc(cur.loaded)}</b>` : ""}. Change le modèle avec <code>ia-choix</code>.</p>`
+    : "";
+
   document.querySelector(".panel").innerHTML = `
+    ${localNote}
     <div class="field"><label><span class="status-dot ${cur.has_key ? "ok" : "no"}"></span>Clé API ${cur.has_key ? `(actuelle : ${esc(cur.api_key_masked)})` : "(non définie)"}</label>
       <input type="password" id="set-key" placeholder="sk-…  laisser vide pour conserver la clé" autocomplete="off" /></div>
     <div class="field"><label>URL de base</label><input type="text" id="set-url" value="${esc(cur.base_url)}" /></div>
@@ -452,7 +457,7 @@ async function renderSettings() {
       <button class="btn" id="set-save">Enregistrer</button>
       <button class="btn secondary" id="set-test">🔌 Tester la connexion</button>
     </div>
-    <p class="tool-desc" style="margin-top:14px">Astuce : DeepSeek utilise <code>https://api.deepseek.com/v1</code> et <code>deepseek-chat</code> ; Qwen utilise <code>https://dashscope.aliyuncs.com/compatible-mode/v1</code> et <code>qwen-plus</code>.</p>
+    <p class="tool-desc" style="margin-top:14px">Astuce : Ollama local utilise <code>http://127.0.0.1:11434/v1</code>. Le modèle suit le choix de <code>ia-choix</code>.</p>
     <div id="set-out"></div>`;
 
   const save = async () => {

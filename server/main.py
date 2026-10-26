@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import llm, settings_store, tools
+from . import llm, local_ai, settings_store, tools
 from .paths import WEB_DIR
 
 app = FastAPI(title="Goblin Tools Local")
@@ -23,13 +23,18 @@ async def llm_error_handler(request: Request, exc: llm.LLMError):
 @app.get("/api/settings")
 async def get_settings():
     s = settings_store.load()
-    key = s.get("api_key", "")
+    resolved = local_ai.resolve(s)
+    key = resolved.get("api_key") or s.get("api_key", "")
     masked = (key[:4] + "…" + key[-4:]) if len(key) > 12 else ("définie" if key else "")
     return {
-        "base_url": s["base_url"],
-        "model": s["model"],
+        "base_url": resolved["base_url"],
+        "model": resolved["model"],
         "api_key_masked": masked,
         "has_key": bool(key),
+        "source": resolved.get("source", "settings"),
+        "primary": resolved.get("primary") or resolved["model"],
+        "fallback": resolved.get("fallback") or "",
+        "loaded": resolved.get("loaded") or "",
     }
 
 

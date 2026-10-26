@@ -18,11 +18,9 @@ def _spice(data: dict, default: int = 3) -> int:
 
 
 # ---------------------------------------------------------------- Magic ToDo
-MAGIC_TODO_SYSTEM = """Tu aides à découper une grosse tâche en petites étapes. \
-Chaque étape tient en une phrase, commence par un verbe et reste faisable tout de suite. \
-Réponds uniquement en JSON, au format :
-{"steps": [{"text": "étape", "substeps": ["sous-étape"]}]}
-Sans sous-étape, substeps est un tableau vide. Rédige tout le texte en français."""
+MAGIC_TODO_SYSTEM = """Découpe une tâche en étapes. Chaque étape : une phrase, verbe d'action.
+JSON uniquement : {"steps":[{"text":"étape","substeps":["sous-étape"]}]}
+Sans sous-étape, substeps = []. Texte en français."""
 
 SPICE_TODO = {
     1: "Donne 2 ou 3 très grandes étapes, sans sous-étape.",
@@ -36,18 +34,28 @@ SPICE_TODO = {
 async def magic_todo(data: dict):
     task = _require(data, "task", "La tâche")
     level = _spice(data)
-    reply = await llm.chat(MAGIC_TODO_SYSTEM, f"{SPICE_TODO[level]}\nTâche : {task}")
-    parsed = llm.parse_json(reply)
-    steps = []
-    for s in parsed.get("steps", []):
-        text = str(s.get("text", "")).strip()
-        if not text:
+    user = f"{SPICE_TODO[level]}\nTâche : {task}"
+    last_err = None
+    for _ in range(2):
+        reply = await llm.chat(MAGIC_TODO_SYSTEM, user, want_json=True)
+        try:
+            parsed = llm.parse_json(reply)
+        except llm.LLMError as exc:
+            last_err = exc
             continue
-        substeps = [str(x).strip() for x in s.get("substeps", []) if str(x).strip()]
-        steps.append({"text": text, "substeps": substeps})
-    if not steps:
-        raise llm.LLMError("Le découpage est vide, réessaie.")
-    return {"steps": steps}
+        steps = []
+        for s in parsed.get("steps", []):
+            if not isinstance(s, dict):
+                continue
+            text = str(s.get("text", "")).strip()
+            if not text:
+                continue
+            substeps = [str(x).strip() for x in s.get("substeps", []) if str(x).strip()]
+            steps.append({"text": text, "substeps": substeps})
+        if steps:
+            return {"steps": steps}
+        last_err = llm.LLMError("Le découpage est vide, réessaie.")
+    raise last_err or llm.LLMError("Le découpage est vide, réessaie.")
 
 
 # --------------------------------------------------------------- Formalizer
@@ -95,6 +103,7 @@ async def formalizer(data: dict):
     reply = await llm.chat(
         FORMALIZER_SYSTEM,
         f"Ton visé : {tone}\n{SPICE_TONE[level]}\nTexte d'origine :\n{text}",
+        want_json=True,
     )
     parsed = llm.parse_json(reply)
     return {"text": str(parsed.get("text", "")).strip(), "tone": tone}
@@ -117,7 +126,7 @@ async def judge(data: dict):
     if extra:
         user += f"\nAutre message du même échange :\n{extra}"
     user += "\nPropose une réponse." if want_reply else "\nDécris seulement l'impression. Laisse reply vide."
-    reply = await llm.chat(JUDGE_SYSTEM, user, temperature=0.3)
+    reply = await llm.chat(JUDGE_SYSTEM, user, temperature=0.3, want_json=True)
     parsed = llm.parse_json(reply)
     impression = str(parsed.get("impression") or parsed.get("summary") or "").strip()
     return {
@@ -158,7 +167,7 @@ async def professor(data: dict):
         guide = f"Niveau : {depth}"
     else:
         guide = SPICE_PROFESSOR[_spice(data)]
-    reply = await llm.chat(PROFESSOR_SYSTEM, f"{guide}\nSujet : {topic}")
+    reply = await llm.chat(PROFESSOR_SYSTEM, f"{guide}\nSujet : {topic}", want_json=True)
     parsed = llm.parse_json(reply)
     explanation = str(parsed.get("explanation") or parsed.get("summary") or "").strip()
     example = str(parsed.get("example") or "").strip()
@@ -189,7 +198,7 @@ async def consultant(data: dict):
     user = f"Situation : {situation}"
     if option_text:
         user += f"\nPistes déjà envisagées :\n{option_text}"
-    reply = await llm.chat(CONSULTANT_SYSTEM, user)
+    reply = await llm.chat(CONSULTANT_SYSTEM, user, want_json=True)
     parsed = llm.parse_json(reply)
     pros = parsed.get("pros", "")
     cons = parsed.get("cons", "")
@@ -226,7 +235,7 @@ SPICE_ESTIMATE = {
 async def estimator(data: dict):
     task = _require(data, "task", "La tâche")
     level = _spice(data, default=2)
-    reply = await llm.chat(ESTIMATOR_SYSTEM, f"{SPICE_ESTIMATE[level]}\nTâche : {task}", temperature=0.3)
+    reply = await llm.chat(ESTIMATOR_SYSTEM, f"{SPICE_ESTIMATE[level]}\nTâche : {task}", temperature=0.3, want_json=True)
     parsed = llm.parse_json(reply)
     items = []
     for it in parsed.get("items", []):
@@ -258,7 +267,7 @@ Rédige tout le texte en français."""
 
 async def compiler(data: dict):
     brainstorm = _require(data, "brainstorm", "Le brainstorm")
-    reply = await llm.chat(COMPILER_SYSTEM, brainstorm)
+    reply = await llm.chat(COMPILER_SYSTEM, brainstorm, want_json=True)
     parsed = llm.parse_json(reply)
     actions = []
     for a in parsed.get("actions", []):
@@ -285,7 +294,7 @@ async def chef(data: dict):
     user = f"Ingrédients disponibles : {ingredients}"
     if constraints:
         user += f"\nContraintes ou préférences : {constraints}"
-    reply = await llm.chat(CHEF_SYSTEM, user)
+    reply = await llm.chat(CHEF_SYSTEM, user, want_json=True)
     parsed = llm.parse_json(reply)
     recipes = []
     for r in parsed.get("recipes", []):
