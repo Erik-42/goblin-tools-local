@@ -133,6 +133,8 @@ textarea, input[type="text"], select {
 textarea:focus, input:focus, select:focus { outline: none; border-color: var(--green); }
 textarea { min-height: 120px; resize: vertical; }
 
+.btn[hidden] { display: none; }
+
 .btn {
   display: inline-block;
   border: none;

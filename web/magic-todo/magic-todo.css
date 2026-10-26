@@ -58,35 +58,139 @@
   flex-wrap: wrap;
 }
 
-.magic-todo__history { margin-top: 28px; }
-
-.magic-todo__recalls { display: flex; flex-direction: column; gap: 8px; }
-
-.magic-todo__recall {
+.magic-todo__head, .magic-todo__toolbar, .magic-todo__add, .magic-todo__tabs {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  width: 100%;
-  text-align: left;
-  background: var(--surface);
-  color: var(--ink);
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.magic-todo__head { justify-content: space-between; align-items: flex-start; }
+
+.magic-todo__name { margin: 0; font-size: 1.7rem; }
+
+.magic-todo__lead { margin: 4px 0 0; color: var(--muted); }
+
+.magic-todo__add { margin: 16px 0; }
+
+.magic-todo__input, .magic-todo__edit, .magic-todo__date, .magic-todo__subform input {
+  flex: 1;
+  min-width: 180px;
+  padding: 12px 14px;
   border: 1.5px solid var(--border);
   border-radius: 12px;
-  padding: 12px 14px;
+  font: inherit;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.magic-todo__plus, .magic-todo__icon, .magic-todo__tab, .magic-todo__close {
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 12px;
   cursor: pointer;
   font: inherit;
 }
 
-.magic-todo__recall:hover { border-color: var(--green); }
+.magic-todo__plus { width: 46px; height: 46px; font-size: 1.4rem; }
 
-.magic-todo__recall--active {
-  border-color: var(--green);
-  background: var(--green-light);
+.magic-todo__tab { padding: 8px 14px; border-radius: 999px; }
+
+.magic-todo__tab--active { background: var(--green); color: var(--on-accent); border-color: var(--green); }
+
+.magic-todo__items { list-style: none; padding: 0; margin: 16px 0; }
+
+.magic-todo__item, .magic-todo__subitem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
 }
 
-.magic-todo__recall-task { font-weight: 700; }
+.magic-todo__item--done .magic-todo__text,
+.magic-todo__item--done .magic-todo__subitem span { text-decoration: line-through; color: var(--muted); }
 
-.magic-todo__recall-meta { color: var(--muted); font-size: 0.82rem; }
+.magic-todo__item--busy { opacity: 0.6; }
 
-.magic-todo__empty { color: var(--muted); margin: 0; }
+.magic-todo__text { flex: 1; font-weight: 700; }
+
+.magic-todo__handle { cursor: grab; color: var(--muted); }
+
+.magic-todo__time, .magic-todo__deadline { color: var(--muted); font-size: 0.85rem; }
+
+.magic-todo__icon { padding: 4px 8px; }
+
+.magic-todo__menu-wrap { position: relative; }
+
+.magic-todo__menu[hidden] { display: none; }
+
+.magic-todo__menu {
+  position: absolute;
+  z-index: 4;
+  right: 0;
+  top: calc(100% + 4px);
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 6px;
+}
+
+.magic-todo__menu button {
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.magic-todo__menu button:hover { background: var(--green-light); }
+
+.magic-todo__subs { list-style: none; padding: 0; margin: 8px 0 0; width: 100%; }
+
+.magic-todo__subform { display: flex; gap: 8px; width: 100%; }
+
+.magic-todo__dialog {
+  border: none;
+  border-radius: 16px;
+  padding: 18px 20px 24px;
+  max-width: 720px;
+  width: calc(100% - 32px);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.magic-todo__dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+
+.magic-todo__close { float: right; padding: 4px 10px; }
+
+.magic-todo__group { margin: 16px 0 8px; font-size: 1rem; }
+
+.magic-todo__template-list { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.magic-todo__template-list button {
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.magic-todo__template-list span {
+  color: var(--muted);
+  margin-left: 6px;
+}

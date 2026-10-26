@@ -1,0 +1,34 @@
+.tool-history { margin-top: 28px; }
+
+.tool-history__title { font-size: 1.1rem; margin: 0 0 8px; }
+
+.tool-history__list { display: flex; flex-direction: column; gap: 8px; }
+
+.tool-history__recall {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.tool-history__recall:hover { border-color: var(--green); }
+
+.tool-history__recall--active {
+  border-color: var(--green);
+  background: var(--green-light);
+}
+
+.tool-history__task { font-weight: 700; }
+
+.tool-history__meta { color: var(--muted); font-size: 0.82rem; }
+
+.tool-history__empty { color: var(--muted); margin: 0; }

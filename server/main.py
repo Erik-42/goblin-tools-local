@@ -63,10 +63,19 @@ async def run_tool(tool_name: str, request: Request):
     return result
 
 
+class FreshStaticFiles(StaticFiles):
+    """The taskbar launcher keeps a Chromium profile. Never let it reuse an old page."""
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+
 # --------------------------------------------------------------------- SPA
 @app.get("/")
 async def index():
-    return FileResponse(WEB_DIR / "index.html")
+    return FileResponse(WEB_DIR / "index.html", headers={"Cache-Control": "no-store"})
 
 
-app.mount("/", StaticFiles(directory=WEB_DIR), name="static")
+app.mount("/", FreshStaticFiles(directory=WEB_DIR), name="static")

@@ -79,184 +79,218 @@ function plural(n, one, many) {
   return `${n} ${Number(n) === 1 ? one : many}`;
 }
 
+function fmtMinutes(m) {
+  m = Number(m) || 0;
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  const min = m % 60;
+  return min ? `${h} h ${min} min` : `${h} h`;
+}
+
 /* ============================ outils ============================ */
 const TOOLS = {
   "magic-todo": {
-    icon: "✅", name: "Magic ToDo", desc: "Découpe une grosse tâche en petites étapes",
-    fields: [{ name: "task", label: "Que veux-tu faire ?", type: "textarea", placeholder: "Par exemple : organiser l'anniversaire d'un ami" }],
-    endpoint: "/api/magic-todo",
-    resultInput: (v) => v.task,
-    history: true,
+    icon: "✅", name: "Magic ToDo", desc: "Découpe les choses à faire",
   },
   formalizer: {
-    icon: "✍️", name: "Formalizer", desc: "Réécrit un texte dans le ton choisi",
-    fields: [
-      { name: "text", label: "Texte d'origine (même brouillon)", type: "textarea", placeholder: "Par exemple : j'ai pas envie d'aller à cette réunion, je suis crevé" },
-      { name: "tone", label: "Ton visé", type: "select", options: [
-        ["clear", "Clair et simple"], ["friendly", "Amical"], ["professional", "Professionnel"],
-        ["academic", "Académique"], ["direct", "Direct"], ["apologetic", "Excuses"], ["enthusiastic", "Enthousiaste"],
-      ] },
-    ],
-    endpoint: "/api/formalizer",
-    resultInput: (v) => v.text,
-    render: (r) => `<div class="result"><h2>Texte réécrit (${esc(r.tone)})</h2><div class="prose">${esc(r.text)}</div></div>`,
+    icon: "✍️", name: "Formalizer", desc: "Change le ton d'un texte",
   },
   judge: {
-    icon: "⚖️", name: "Judge", desc: "Analyse les émotions cachées dans un texte",
-    fields: [{ name: "text", label: "Colle le message qui te laisse perplexe", type: "textarea", placeholder: "Par exemple : un message du chef « passe me voir dans mon bureau quand tu as cinq minutes. »" }],
+    icon: "⚖️", name: "Judge", desc: "Lit l'émotion d'un texte",
+    help: "Colle un message. Juger décrit l'impression qu'il donne. Proposer une réponse écrit un message que tu pourrais renvoyer. Ajouter sert à coller un second message du même échange.",
+    fields: [
+      { name: "text", label: "Écris ton texte ici…", type: "textarea", placeholder: "Par exemple : un message « passe me voir dans mon bureau quand tu as cinq minutes. »" },
+      { name: "extra", label: "Autre message", type: "textarea", placeholder: "Un autre message du même échange", optionalToggle: "Ajouter", required: false },
+    ],
+    actions: [
+      { mode: "judge", label: "Juger" },
+      { mode: "reply", label: "Proposer une réponse", secondary: true },
+    ],
     endpoint: "/api/judge",
     resultInput: (v) => v.text,
+    summary: (r) => r.tone || r.impression || "",
     render: (r) => `
-      <div class="result"><h2>Analyse des émotions</h2>
-        <div class="prose">${esc(r.summary)}</div>
-        ${r.tone ? `<p class="kv" style="margin-top:12px"><b>Ton général :</b><span class="tag">${esc(r.tone)}</span></p>` : ""}
-        ${(r.emotions || []).map((e) => `<div class="step"><b>${esc(e.name)}</b><div class="substep" style="padding-left:0">${esc(e.evidence)}</div></div>`).join("")}
+      <div class="result">
+        <label>Ton texte donne l'impression de…</label>
+        <div class="prose" id="judge-impression">${esc(r.impression || r.summary || "")}</div>
+        ${r.reply ? `<label>Réponse possible</label><div class="prose" id="judge-reply">${esc(r.reply)}</div>
+          <button class="copy-text" type="button" data-copy-target="#judge-reply">Copier</button>` : ""}
       </div>`,
   },
   professor: {
-    icon: "🎓", name: "Professor", desc: "Explique n'importe quel sujet, au niveau choisi",
+    icon: "🎓", name: "Professor", desc: "Explique n'importe quoi",
+    help: "Écris un sujet. Le piquant règle le niveau de détail. Tu obtiens une explication, puis un exemple.",
+    submitLabel: "Expliquer",
     fields: [
-      { name: "topic", label: "Qu'est-ce que tu veux comprendre ?", type: "textarea", placeholder: "Par exemple : comment fonctionne l'informatique quantique" },
-      { name: "depth", label: "Niveau d'explication", type: "select", options: [
-        ["child", "Comme à un enfant de 6 ans"], ["teen", "Niveau collège"], ["college", "Niveau université"], ["expert", "Niveau expert"],
-      ] },
+      { name: "topic", label: "Écris un sujet ici…", type: "textarea", placeholder: "Par exemple : comment fonctionne un four" },
+      { name: "spice", type: "spice", hint: "Niveau de piquant : jusqu'où détailler l'explication.", default: 3 },
     ],
     endpoint: "/api/professor",
     resultInput: (v) => v.topic,
+    summary: (r) => String(r.explanation || r.summary || "").slice(0, 80),
     render: (r) => `
-      <div class="result"><h2>Explication</h2>
-        ${r.summary ? `<div class="prose">${esc(r.summary)}</div>` : ""}
-        <div style="margin-top:12px">${(r.points || []).map((p) => `<div class="step"><b>${esc(p.title)}</b><div class="substep" style="padding-left:0">${esc(p.body)}</div></div>`).join("")}</div>
+      <div class="result">
+        <label>L'explication</label>
+        <div class="prose">${esc(r.explanation || r.summary || "")}</div>
+        ${r.example ? `<label>Avec un exemple</label><div class="prose">${esc(r.example)}</div>` : ""}
+        ${(r.points || []).map((p) => `<div class="step"><b>${esc(p.title)}</b><div class="substep" style="padding-left:0">${esc(p.body)}</div></div>`).join("")}
       </div>`,
   },
   consultant: {
-    icon: "💡", name: "Consultant", desc: "Pèse les options et aide à décider",
+    icon: "💡", name: "Consultant", desc: "Aide à décider",
+    help: "Décris ce qui te fait hésiter. Tu obtiens les avantages, les inconvénients, puis un conseil.",
+    submitLabel: "Donner un conseil",
     fields: [
-      { name: "situation", label: "Qu'est-ce qui te fait hésiter ?", type: "textarea", placeholder: "Par exemple : ce week-end, je finis le dossier ou je vais au concert" },
-      { name: "options", label: "Options (une par ligne, facultatif)", type: "textarea", placeholder: "Finir le dossier\nAller au concert" },
+      { name: "situation", label: "Écris la situation ici…", type: "textarea", placeholder: "Par exemple : ce week-end, je finis le dossier ou je vais au concert" },
     ],
     endpoint: "/api/consultant",
     resultInput: (v) => v.situation,
-    buildBody: (v) => ({ situation: v.situation, options: (v.options || "").split("\n").map((s) => s.trim()).filter(Boolean) }),
+    summary: (r) => String(r.advice || r.recommendation || "").slice(0, 80),
     render: (r) => `
-      <div class="result"><h2>Analyse de la décision</h2>
-        ${(r.options || []).map((o) => `
-          <div class="step"><b>${esc(o.name)}</b>
-            <div class="kv" style="margin-top:6px">${(o.pros || []).map((p) => `<span class="tag">👍 ${esc(p)}</span>`).join("")}
-            ${(o.cons || []).map((c) => `<span class="tag tag--con">👎 ${esc(c)}</span>`).join("")}</div>
-          </div>`).join("")}
-        ${r.recommendation ? `<div class="prose" style="margin-top:12px"><b>Conseil :</b> ${esc(r.recommendation)}</div>` : ""}
+      <div class="result">
+        <label>Avantages</label><div class="prose">${esc(r.pros || "")}</div>
+        <label>Inconvénients</label><div class="prose">${esc(r.cons || "")}</div>
+        <label>Le conseil</label><div class="prose">${esc(r.advice || r.recommendation || "")}</div>
       </div>`,
   },
   estimator: {
-    icon: "⏱️", name: "Estimator", desc: "Estime le temps qu'une tâche prend vraiment",
-    fields: [{ name: "task", label: "La tâche à estimer", type: "textarea", placeholder: "Par exemple : nettoyer tout l'appartement et lancer une machine" }],
+    icon: "⏱️", name: "Estimator", desc: "Devine combien de temps prendra une activité",
+    help: "Décris une activité. Le piquant règle le niveau de prudence de la durée.",
+    submitLabel: "Estimer",
+    fields: [
+      { name: "task", label: "Écris une activité ici…", type: "textarea", placeholder: "Par exemple : nettoyer l'appartement et lancer une machine" },
+      { name: "spice", type: "spice", hint: "Niveau de piquant : à quel point détailler la durée.", default: 2 },
+    ],
     endpoint: "/api/estimator",
     resultInput: (v) => v.task,
-    render: (r) => {
-      const fmt = (m) => {
-        if (m < 60) return `${m} min`;
-        const h = Math.floor(m / 60);
-        const min = m % 60;
-        return min ? `${h} h ${min} min` : `${h} h`;
-      };
-      return `<div class="result"><h2>Estimation du temps</h2>
-        <div class="panel">${(r.items || []).map((i) => `<div class="mini-item"><span>${esc(i.text)}</span><b>${fmt(i.minutes)}</b></div>`).join("")}</div>
-        <div class="total-bar">Total d'environ ${fmt(r.total_minutes)}</div></div>`;
-    },
+    summary: (r) => r.rough || fmtMinutes(r.total_minutes),
+    render: (r) => `<div class="result"><label>Ça prendra à peu près…</label><div class="prose">${esc(r.rough || fmtMinutes(r.total_minutes))}</div></div>`,
   },
   compiler: {
-    icon: "🧠", name: "Compiler", desc: "Transforme un brainstorm en actions concrètes",
-    fields: [{ name: "brainstorm", label: "Vide toutes tes idées", type: "textarea", placeholder: "Écris n'importe comment, plus c'est en vrac, mieux c'est…" }],
+    icon: "🧠", name: "Compiler", desc: "Transforme un vrac d'idées en tâches",
+    help: "Vide tout ce qui tourne dans ta tête. Le résultat est une liste d'actions, que tu peux envoyer dans Magic ToDo.",
+    submitLabel: "Transformer en tâches",
+    fields: [{ name: "brainstorm", label: "Écris ton vrac ici…", type: "textarea", placeholder: "Écris n'importe comment, plus c'est en vrac, mieux c'est…" }],
     endpoint: "/api/compiler",
     resultInput: (v) => v.brainstorm,
-    render: (r) => `<div class="result"><h2>Liste d'actions</h2>
-      <ul class="step-list">${(r.actions || []).map((a) => `<li class="step"><b>${esc(a.text)}</b>${a.category ? `<span class="tag" style="margin-left:8px">${esc(a.category)}</span>` : ""}</li>`).join("")}</ul></div>`,
+    summary: (r) => plural((r.actions || []).length, "action", "actions"),
+    render: (r) => `<div class="result"><h2>Tâches</h2>
+      <ul class="step-list">${(r.actions || []).map((a) => `<li class="step"><b>${esc(a.text)}</b>${a.category ? `<span class="tag" style="margin-left:8px">${esc(a.category)}</span>` : ""}</li>`).join("")}</ul>
+      <button class="btn secondary" type="button" id="compiler-send">Ajouter à Magic ToDo</button></div>`,
   },
   chef: {
-    icon: "👨‍🍳", name: "Chef", desc: "Propose des recettes avec ce que tu as",
+    icon: "👨‍🍳", name: "Chef", desc: "Compose une recette avec ce que tu as",
+    help: "Écris les ingrédients, et aussi le nombre de personnes, le temps ou un régime si tu veux. Le résultat se copie.",
+    submitLabel: "Suggérer",
     fields: [
-      { name: "ingredients", label: "Qu'est-ce que tu as sous la main ?", type: "textarea", placeholder: "Par exemple : œufs, tomates, riz restant, un peu de fromage" },
-      { name: "constraints", label: "Contraintes ou préférences (facultatif)", type: "text", placeholder: "Par exemple : pas épicé, prêt en 15 minutes" },
+      { name: "ingredients", label: "Ingrédients et contraintes", type: "textarea", placeholder: "Écris ce que tu as, et aussi un régime, un nombre de personnes, un temps…" },
     ],
     endpoint: "/api/chef",
     resultInput: (v) => v.ingredients,
-    render: (r) => `<div class="result"><h2>Tu peux faire ça</h2>
-      ${(r.recipes || []).map((rc) => `<div class="recipe"><b>${esc(rc.name)}</b><div class="kv">${esc(rc.description)}</div>
-        <div>${(rc.ingredients || []).map((i) => `<span class="tag">${esc(i)}</span>`).join("")}</div>
-        <ol>${(rc.steps || []).map((s) => `<li>${esc(s)}</li>`).join("")}</ol></div>`).join("")}</div>`,
+    summary: (r) => (r.recipes || []).map((recipe) => recipe.name).filter(Boolean).join(", "),
+    render: (r) => {
+      const text = (r.recipes || []).map((rc) => [rc.name, rc.description, ...(rc.steps || [])].filter(Boolean).join("\n")).join("\n\n");
+      return `<div class="result"><label>Tu pourrais cuisiner…</label>
+        <div class="prose" id="chef-output">${esc(text)}</div>
+        <button class="copy-text" type="button" data-copy-target="#chef-output">Copier</button></div>`;
+    },
   },
 };
 
 const HOME_CARDS = [
   ["magic-todo"], ["formalizer"], ["judge"],
-  ["taskmaster", { icon: "⏯️", name: "Taskmaster", desc: "Une seule étape à la fois", badge: "Nouveau" }],
+  ["taskmaster", { icon: "⏯️", name: "Taskmaster", desc: "Une seule tâche à la fois", badge: "Nouveau" }],
   ["professor"], ["consultant"], ["estimator"], ["compiler"], ["chef"],
 ];
 
-/* ============================ listes vers Taskmaster ============================ */
-function saveTodoList(taskText, steps) {
-  const lists = loadJSON(LS_LISTS, []);
-  lists.unshift({ id: Date.now(), name: taskText, steps, created: Date.now() });
-  saveJSON(LS_LISTS, lists.slice(0, 30));
-  toast("Liste enregistrée ✅");
-}
-
-function focusTodoList(taskText, steps) {
-  const lists = loadJSON(LS_LISTS, []);
-  const item = { id: Date.now(), name: taskText, steps, created: Date.now() };
-  lists.unshift(item);
-  saveJSON(LS_LISTS, lists.slice(0, 30));
-  saveJSON(LS_FOCUS, { listId: item.id, idx: 0, done: 0, skipped: 0 });
-  location.hash = "#/taskmaster";
-}
-
 /* ============================ page d'un outil ============================ */
-function renderToolPage(tool) {
+function fillForm(values) {
+  const form = document.getElementById("tool-form");
+  if (!form || !values) return;
+  for (const [name, value] of Object.entries(values)) {
+    const field = form.elements[name];
+    if (field) field.value = value ?? "";
+  }
+}
+
+function fieldHtml(field) {
+  if (field.type === "spice") {
+    return `<div class="field"><div data-spice="${field.name}" data-spice-value="${field.default ?? 3}" data-spice-hint="${esc(field.hint || "")}"></div></div>`;
+  }
+  const control = field.type === "textarea"
+    ? `<textarea name="${field.name}" placeholder="${esc(field.placeholder || "")}"></textarea>`
+    : field.type === "select"
+      ? `<select name="${field.name}">${field.options.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("")}</select>`
+      : `<input type="text" name="${field.name}" placeholder="${esc(field.placeholder || "")}" />`;
+  if (field.optionalToggle) {
+    return `<div class="field"><button class="btn secondary small" type="button" data-reveal="${field.name}">${esc(field.optionalToggle)}</button>
+      <div data-revealed="${field.name}" hidden><label>${esc(field.label)}</label>${control}</div></div>`;
+  }
+  return `<div class="field">${field.label ? `<label>${esc(field.label)}</label>` : ""}${control}</div>`;
+}
+
+function renderToolPage(id) {
+  const tool = TOOLS[id];
+  const actions = tool.actions || [{ mode: "", label: tool.submitLabel || "Lancer ✨" }];
   $app.innerHTML = `
     <p><a class="back" href="#/">← Tous les outils</a></p>
-    <div class="tool-head"><span class="icon">${tool.icon}</span><h1>${esc(tool.name)}</h1></div>
+    <div class="tool-head">
+      <span class="icon">${tool.icon}</span><h1>${esc(tool.name)}</h1>
+      ${tool.help ? `<div class="tool-help"><button class="tool-help__toggle" type="button" aria-expanded="false">Aide ?</button><p class="tool-help__text" hidden>${esc(tool.help)}</p></div>` : ""}
+    </div>
     <p class="tool-desc">${esc(tool.desc)}</p>
     <form id="tool-form">
-      ${tool.fields.map((f) => `
-        <div class="field"><label>${esc(f.label)}</label>
-          ${f.type === "textarea"
-            ? `<textarea name="${f.name}" placeholder="${esc(f.placeholder || "")}"></textarea>`
-            : f.type === "select"
-              ? `<select name="${f.name}">${f.options.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("")}</select>`
-              : `<input type="text" name="${f.name}" placeholder="${esc(f.placeholder || "")}" />`}
-        </div>`).join("")}
-      <button class="btn" type="submit">Lancer ✨</button>
+      ${tool.fields.map(fieldHtml).join("")}
+      <div class="formalizer__row">
+        ${actions.map((action) => `<button class="btn${action.secondary ? " secondary" : ""}" type="submit" data-mode="${esc(action.mode)}">${esc(action.label)}</button>`).join("")}
+      </div>
     </form>
     <div id="out"></div>
-    ${tool.history ? `<div id="todo-history"></div>` : ""}`;
+    <div id="tool-history"></div>`;
+  $app.querySelectorAll("[data-spice]").forEach((slot) => {
+    Spice.mount(slot, { name: slot.dataset.spice, value: slot.dataset.spiceValue, hint: slot.dataset.spiceHint });
+  });
+  $app.querySelectorAll("[data-reveal]").forEach((button) => {
+    button.onclick = () => {
+      const box = $app.querySelector(`[data-revealed="${button.dataset.reveal}"]`);
+      box.hidden = false;
+      button.hidden = true;
+      box.querySelector("textarea, input").focus();
+    };
+  });
+  ToolHelp.bind($app);
 
-  function recallTodo(entry) {
-    const field = document.querySelector('#tool-form [name="task"]');
-    if (field) field.value = entry.task;
-    showTodo(entry);
+  function paintHistory(activeId) {
+    ToolHistory.mount(document.getElementById("tool-history"), id, activeId, showEntry);
   }
 
-  function showTodo(entry) {
-    const out = document.getElementById("out");
-    MagicTodo.mountResult(out, entry, {
-      onSave: saveTodoList,
-      onFocus: focusTodoList,
-      onChange() {
-        MagicTodo.mountHistory(document.getElementById("todo-history"), entry.id, recallTodo);
-      },
+  function showEntry(entry) {
+    fillForm(entry.values);
+    $app.querySelectorAll("[data-spice]").forEach((slot) => {
+      Spice.mount(slot, {
+        name: slot.dataset.spice,
+        value: entry.values[slot.dataset.spice] || slot.dataset.spiceValue,
+        hint: slot.dataset.spiceHint,
+      });
     });
-    MagicTodo.mountHistory(document.getElementById("todo-history"), entry.id, recallTodo);
+    const out = document.getElementById("out");
+    out.innerHTML = tool.render(entry.result);
+    CopyText.bind(out, toast);
+    const send = document.getElementById("compiler-send");
+    if (send) send.onclick = () => MagicTodo.addItems((entry.result.actions || []).map((action) => action.text));
+    paintHistory(entry.id);
     out.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
-  if (tool.history) MagicTodo.mountHistory(document.getElementById("todo-history"), null, recallTodo);
+  paintHistory(null);
 
   document.getElementById("tool-form").onsubmit = async (e) => {
     e.preventDefault();
     const values = Object.fromEntries(new FormData(e.target).entries());
+    if (e.submitter && e.submitter.dataset.mode) values.mode = e.submitter.dataset.mode;
     for (const f of tool.fields) {
-      if (f.required !== false && !String(values[f.name] || "").trim() && f.name !== "options" && f.name !== "constraints") {
+      if (f.type === "spice" || f.required === false) continue;
+      if (!String(values[f.name] || "").trim() && f.name !== "options" && f.name !== "constraints") {
         toast(`Commence par remplir « ${f.label} »`);
         return;
       }
@@ -267,8 +301,12 @@ function renderToolPage(tool) {
     try {
       const result = await apiCall(tool.endpoint, body);
       addHistory(tool.name, tool.resultInput(values), result);
-      if (tool.history) showTodo(MagicTodo.remember(values.task, result.steps));
-      else out.innerHTML = tool.render(result);
+      showEntry(ToolHistory.remember(id, {
+        label: tool.resultInput(values),
+        meta: tool.summary ? tool.summary(result) : "",
+        values,
+        result,
+      }));
     } catch (err) {
       out.innerHTML = `<div class="alert">⚠️ ${esc(err.message)}
         ${err.code === "not_configured" ? ' <a href="#/settings">Ouvrir les réglages →</a>' : ""}</div>`;
@@ -278,19 +316,38 @@ function renderToolPage(tool) {
 
 /* ============================ Taskmaster (focus local) ============================ */
 function renderTaskmaster() {
-  const lists = loadJSON(LS_LISTS, []);
+  const board = MagicTodo.currentList();
+  const lists = board.items.length
+    ? [{ id: board.id, name: board.name, steps: board.items.map((row) => ({ text: row.text, done: row.done, substeps: row.subtasks.map((sub) => sub.text), itemId: row.id })) }]
+    : loadJSON(LS_LISTS, []);
   $app.innerHTML = `
     <p><a class="back" href="#/">← Tous les outils</a></p>
-    <div class="tool-head"><span class="icon">⏯️</span><h1>Taskmaster</h1><span class="badge-new">Nouveau</span></div>
-    <p class="tool-desc">Une seule étape à l'écran : coche, puis passe à la suivante. Découpe d'abord une tâche dans <a href="#/magic-todo">Magic ToDo</a> et enregistre la liste.</p>
+    <div class="tool-head"><span class="icon">⏯️</span><h1>Taskmaster</h1><span class="badge-new">Nouveau</span>
+      <div class="tool-help"><button class="tool-help__toggle" type="button" aria-expanded="false">Aide ?</button>
+        <p class="tool-help__text" hidden>Une seule tâche de l'onglet Magic ToDo en cours. Coche-la, puis passe à la suivante.</p></div>
+    </div>
+    <p class="tool-desc">Ta mission, si tu l'acceptes</p>
     <div id="tm-body"></div>`;
+  ToolHelp.bind($app);
   const body = document.getElementById("tm-body");
 
+  if (board.items.length) {
+    const previous = loadJSON(LS_FOCUS, null);
+    if (!previous || previous.listId !== board.id) {
+      const pending = board.items.findIndex((row) => !row.done);
+      saveJSON(LS_FOCUS, {
+        listId: board.id,
+        idx: pending === -1 ? board.items.length : pending,
+        done: board.items.filter((row) => row.done).length,
+        skipped: 0,
+      });
+    }
+  }
   const focus = loadJSON(LS_FOCUS, null);
   const activeList = focus && lists.find((l) => l.id === focus.listId);
 
-  if (!lists.length) {
-    body.innerHTML = `<div class="panel">Aucune liste pour l'instant. <a href="#/magic-todo">Découper une tâche avec Magic ToDo →</a></div>`;
+  if (!lists.length || !lists[0].steps.length) {
+    body.innerHTML = `<div class="panel">Rien dans cet onglet pour l'instant. Ajoute d'abord des éléments dans <a href="#/magic-todo">Magic ToDo</a>.</div>`;
     return;
   }
 
@@ -330,7 +387,11 @@ function renderTaskmaster() {
       <div style="color:var(--muted);font-size:0.85rem">${plural(focus.done, "faite", "faites")} · ${plural(focus.skipped, "passée", "passées")}</div>
     </div>
     <div style="margin-top:14px"><button class="btn secondary small" id="tm-exit">Quitter le focus</button></div>`;
-  const next = (inc) => { saveJSON(LS_FOCUS, { ...focus, idx: focus.idx + 1, done: focus.done + (inc === "done" ? 1 : 0), skipped: focus.skipped + (inc === "skip" ? 1 : 0) }); renderTaskmaster(); };
+  const next = (inc) => {
+    if (inc === "done" && step.itemId) MagicTodo.markItem(activeList.id, step.itemId, true);
+    saveJSON(LS_FOCUS, { ...focus, idx: focus.idx + 1, done: focus.done + (inc === "done" ? 1 : 0), skipped: focus.skipped + (inc === "skip" ? 1 : 0) });
+    renderTaskmaster();
+  };
   document.getElementById("tm-done").onclick = () => next("done");
   document.getElementById("tm-skip").onclick = () => next("skip");
   document.getElementById("tm-exit").onclick = () => { localStorage.removeItem(LS_FOCUS); renderTaskmaster(); };
@@ -426,10 +487,17 @@ const ROUTES = {
   taskmaster: renderTaskmaster,
 };
 
+function renderMagicBoard() {
+  $app.innerHTML = `<div id="magic-board"></div>`;
+  MagicTodo.mountBoard(document.getElementById("magic-board"));
+}
+
 function route() {
   const id = location.hash.replace(/^#\/?/, "");
+  if (id === "magic-todo") return renderMagicBoard();
+  if (id === "formalizer") return Formalizer.mount($app);
   if (ROUTES[id]) return ROUTES[id]();
-  if (TOOLS[id]) return renderToolPage(TOOLS[id]);
+  if (TOOLS[id] && TOOLS[id].fields) return renderToolPage(id);
   renderHome();
 }
 

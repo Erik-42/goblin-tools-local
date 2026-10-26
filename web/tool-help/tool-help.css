@@ -1,0 +1,18 @@
+.tool-help { position: relative; }
+
+.tool-help__toggle {
+  border: 1.5px solid var(--danger-border);
+  background: transparent;
+  color: var(--danger-ink);
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.tool-help__text {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}

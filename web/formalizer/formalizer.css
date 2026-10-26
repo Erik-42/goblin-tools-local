@@ -1,0 +1,30 @@
+.formalizer__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.formalizer__head h1 { margin: 0; }
+.formalizer__lead { color: var(--muted); margin-top: 4px; }
+.formalizer textarea { width: 100%; min-height: 140px; }
+.formalizer__row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0; }
+.formalizer__toggle, .formalizer__fav, .formalizer__pick, .formalizer__star {
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font: inherit;
+}
+.formalizer__menu {
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 10px;
+  background: var(--surface);
+  margin-bottom: 12px;
+}
+.formalizer__choice { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.formalizer__pick { flex: 1; text-align: left; }
+.formalizer__pick[aria-checked="true"], .formalizer__fav--on, .formalizer__star[aria-pressed="true"] {
+  border-color: var(--green);
+  background: var(--green-light);
+}
+.formalizer__fav-label { margin: 0 0 6px; font-weight: 700; }
+.formalizer__favs { display: flex; flex-wrap: wrap; gap: 8px; }
+.formalizer__out { margin-top: 16px; }
