@@ -304,6 +304,16 @@
   let preview = null;
   let busyId = null;
 
+  // Fermer le menu d'options (et le sélecteur échéance/sous-tâche) en cliquant à côté.
+  document.addEventListener("click", (event) => {
+    if (openMenu === null) return;
+    if (event.target.closest(".magic-todo__menu-wrap")) return;
+    if (event.target.closest(".magic-todo__date")) return;
+    if (event.target.closest(".magic-todo__subform")) return;
+    openMenu = null;
+    paint();
+  });
+
   function persist() {
     save(state);
   }
@@ -716,7 +726,14 @@
         if (!text) { paint(); return; }
         commit(() => { findItem(state, id).text = text; });
       };
-      input.addEventListener("keydown", (event) => { if (event.key === "Enter") finish(); });
+      const cancel = () => {
+        closed = true;
+        paint();
+      };
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") finish();
+        if (event.key === "Escape") cancel();
+      });
       input.addEventListener("blur", finish);
       return;
     }

@@ -1,4 +1,6 @@
 """FastAPI entry point: serves the web SPA and the /api tool endpoints."""
+import httpx
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -29,8 +31,12 @@ async def auth_middleware(request: Request, call_next):
     token = settings.get("auth_token")
     path = request.url.path
     if token and path.startswith("/api/") and path != "/api/health":
-        if path == "/api/settings" and request.method == "GET":
-            pass  # masque la clé, pas de secret exposé
+        # Les réglages (lecture, écriture, test de connexion, liste des modèles)
+        # restent accessibles sans jeton : c'est depuis cette page que le jeton
+        # se configure. Le jeton protège les appels outils / assistant, pas la
+        # page de configuration.
+        if path == "/api/settings" or path == "/api/settings/test" or path == "/api/models":
+            pass
         else:
             auth = request.headers.get("authorization", "")
             if auth != f"Bearer {token}":
@@ -73,6 +79,34 @@ async def get_settings():
         "cors_origins": s.get("cors_origins") or "",
         "ai_mode": s.get("ai_mode"),
     }
+
+
+@app.get("/api/models")
+async def list_models():
+    """Liste les modèles disponibles chez le fournisseur configuré."""
+    s = settings_store.load()
+    endpoint = local_ai.resolve(s)
+    base = str(endpoint.get("base_url") or "").rstrip("/")
+    models: list[str] = []
+    try:
+        async with httpx.AsyncClient(timeout=6.0) as client:
+            if local_ai.is_local_endpoint(base):
+                url = base.replace("/v1", "") + "/api/tags"
+                resp = await client.get(url)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    models = [str(m.get("name")) for m in (data.get("models") or []) if m.get("name")]
+            else:
+                resp = await client.get(base + "/models")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    models = [str(m.get("id")) for m in (data.get("data") or []) if m.get("id")]
+    except Exception:
+        pass
+    current = s.get("model") or endpoint.get("model") or ""
+    if current and current not in models:
+        models.insert(0, current)
+    return {"models": models, "current": current}
 
 
 @app.put("/api/settings")

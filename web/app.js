@@ -586,6 +586,14 @@ async function renderSettings() {
     return;
   }
 
+  let models = [];
+  try {
+    const m = await apiCall("/api/models", undefined, "GET");
+    models = m.models || [];
+  } catch { /* liste indisponible : le champ reste saisissable manuellement */ }
+
+  const modelOptions = models.map((m) => `<option value="${esc(m)}">`).join("");
+
   const localNote = cur.source === "ia-choix" || cur.source === "ollama"
     ? `<p class="tool-desc" style="margin-top:0">IA locale active : <b>${esc(cur.model)}</b>${cur.fallback ? ` · secours <b>${esc(cur.fallback)}</b>` : ""}${cur.loaded ? ` · en mémoire <b>${esc(cur.loaded)}</b>` : ""}. Change le modèle avec <code>ia-choix</code>.</p>`
     : "";
@@ -608,24 +616,38 @@ async function renderSettings() {
         <option value="distant">${t("settings.aiMode.distant")}</option>
         <option value="local">${t("settings.aiMode.local")}</option>
       </select></div>
-    <div class="field"><label>${t("settings.host")}</label><input type="text" id="set-host" value="${esc(cur.host)}" /></div>
-    <div class="field"><label>${t("settings.port")}</label><input type="text" id="set-port" value="${esc(cur.port)}" /></div>
-    <div class="field"><label>${t("settings.dataDir")}</label><input type="text" id="set-data-dir" placeholder="${t("settings.dataDir.placeholder")}" value="${esc(cur.data_dir || "")}" /></div>
-    <div class="field"><label>${t("settings.authToken")}</label><input type="password" id="set-auth-token" placeholder="${t("settings.authToken.placeholder")}" autocomplete="off" /></div>
-    <div class="field"><label>${t("settings.cors")}</label><input type="text" id="set-cors" placeholder="${t("settings.cors.placeholder")}" value="${esc(cur.cors_origins)}" /></div>
     <div class="field"><label><span class="status-dot ${cur.has_key ? "ok" : "no"}"></span>${t("settings.apiKey")} ${cur.has_key ? t("settings.apiKey.current", { masked: esc(cur.api_key_masked) }) : t("settings.apiKey.none")}</label>
       <input type="password" id="set-key" placeholder="${t("settings.apiKey.placeholder")}" autocomplete="off" /></div>
     <div class="field"><label>${t("settings.baseUrl")}</label><input type="text" id="set-url" value="${esc(cur.base_url)}" /></div>
-    <div class="field"><label>${t("settings.model")}</label><input type="text" id="set-model" value="${esc(cur.model)}" /></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <div class="field"><label>${t("settings.model")}</label>
+      <input type="text" id="set-model" list="model-list" value="${esc(cur.model)}" />
+      <datalist id="model-list">${modelOptions}</datalist>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn secondary small" id="set-advanced">▼ ${t("settings.advanced")}</button>
       <button class="btn" id="set-save">${t("settings.save")}</button>
       <button class="btn secondary" id="set-test">🔌 ${t("settings.test")}</button>
+    </div>
+    <div id="set-advanced-box" hidden>
+      <div class="field"><label>${t("settings.host")}</label><input type="text" id="set-host" value="${esc(cur.host)}" /></div>
+      <div class="field"><label>${t("settings.port")}</label><input type="text" id="set-port" value="${esc(cur.port)}" /></div>
+      <div class="field"><label>${t("settings.dataDir")}</label><input type="text" id="set-data-dir" placeholder="${t("settings.dataDir.placeholder")}" value="${esc(cur.data_dir || "")}" /></div>
+      <div class="field"><label>${t("settings.authToken")}</label><input type="password" id="set-auth-token" placeholder="${t("settings.authToken.placeholder")}" autocomplete="off" /></div>
+      <div class="field"><label>${t("settings.cors")}</label><input type="text" id="set-cors" placeholder="${t("settings.cors.placeholder")}" value="${esc(cur.cors_origins)}" /></div>
     </div>
     <p class="tool-desc" style="margin-top:14px">${t("settings.tip")}</p>
     <div id="set-out"></div>`;
 
   document.getElementById("set-mode").value = cur.mode || "server";
   document.getElementById("set-ai-mode").value = cur.ai_mode || "auto";
+  document.getElementById("set-advanced").onclick = () => {
+    const box = document.getElementById("set-advanced-box");
+    const hidden = box.hidden;
+    box.hidden = !hidden;
+    document.getElementById("set-advanced").textContent = hidden
+      ? `▲ ${t("settings.advanced")}`
+      : `▼ ${t("settings.advanced")}`;
+  };
 
   async function refreshHealth() {
     try {
