@@ -75,8 +75,9 @@ clique sur « Tester la connexion » → c'est prêt.
 ## 🔒 Confidentialité
 
 - En dehors de l'API de modèle que tu configures, l'application **ne contacte aucun tiers** — pas de statistiques, pas de traceur, pas de compte
-- La configuration API est sur la machine (fichier `goblin-settings.json` à côté de l'exe) ; l'historique et les listes restent dans le localStorage du navigateur
+- La configuration API est sur la machine, dans le répertoire de données utilisateur (hors de l'application, fichier `goblin-settings.json`) : elle est retrouvée après une réinstallation ou une nouvelle session. L'historique et les listes restent dans le localStorage du navigateur
 - Le thème (clair ou sombre) est lui aussi stocké dans le navigateur
+- Le répertoire de données peut être déplacé avec la variable d'environnement `GOBLIN_DATA_DIR` ou le champ « Répertoire de données » des réglages
 - Téléphone et ordinateur sur le même réseau : le navigateur du téléphone peut ouvrir l'IP de l'ordinateur sur le port 8765 (l'interface est responsive)
 
 ## 🏗️ Stack et structure

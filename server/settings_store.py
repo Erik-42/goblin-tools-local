@@ -79,5 +79,6 @@ def save(settings: dict) -> dict:
                 except (TypeError, ValueError):
                     continue
             current[key] = value
+    SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
     SETTINGS_PATH.write_text(json.dumps(current, indent=2), encoding="utf-8")
     return current

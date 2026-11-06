@@ -2,11 +2,13 @@
 
 In a frozen one-file build, read-only bundle data lives under sys._MEIPASS
 (a temp dir recreated on every launch), while writable user config must sit
-next to the exe so it survives restarts.
+outside the application directory so it survives a reinstallation or a new
+session.
 
 Le répertoire de données (config + persistance) est configurable via
-GOBLIN_DATA_DIR. En mode LOCAL il vaut APP_DIR (à côté de l'exe) ; en mode
-SERVEUR il peut pointer vers un volume monté.
+GOBLIN_DATA_DIR. Par défaut il pointe vers un répertoire utilisateur persistant
+hors de l'application, afin que les réglages soient retrouvés après une
+réinstallation ou une nouvelle session.
 """
 import os
 import sys
@@ -23,7 +25,25 @@ else:
 
 WEB_DIR = BUNDLE_DIR / "web"
 
-# Répertoire de données : GOBLIN_DATA_DIR s'il est défini, sinon APP_DIR.
+def default_data_dir() -> Path:
+    """Répertoire de données utilisateur persistant, hors du répertoire de l'appli.
+
+    - Windows : %APPDATA%/Goblin Tools
+    - macOS   : ~/Library/Application Support/Goblin Tools
+    - Linux   : $XDG_DATA_HOME/goblin-tools (défaut ~/.local/share/goblin-tools)
+    """
+    home = Path.home()
+    if sys.platform.startswith("win"):
+        return Path(os.environ.get("APPDATA", home)) / "Goblin Tools"
+    if sys.platform == "darwin":
+        return home / "Library" / "Application Support" / "Goblin Tools"
+    xdg = os.environ.get("XDG_DATA_HOME", "").strip()
+    base = Path(xdg) if xdg else home / ".local" / "share"
+    return base / "goblin-tools"
+
+
+# Répertoire de données : GOBLIN_DATA_DIR s'il est défini, sinon un répertoire
+# utilisateur persistant hors de l'application (survit à la réinstallation).
 _DATA_DIR = os.environ.get("GOBLIN_DATA_DIR", "").strip()
-DATA_DIR = Path(_DATA_DIR) if _DATA_DIR else APP_DIR
+DATA_DIR = Path(_DATA_DIR) if _DATA_DIR else default_data_dir()
 SETTINGS_PATH = DATA_DIR / "goblin-settings.json"
