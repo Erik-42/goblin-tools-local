@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import llm, local_ai, settings_store, tools
+from . import assistant, llm, local_ai, settings_store, tools
 from .paths import WEB_DIR
 
 app = FastAPI(title="Goblin Tools Local")
@@ -86,6 +86,17 @@ async def put_settings(data: dict):
 async def test_settings():
     reply = await llm.chat("Tu es un assistant de test.", "Réponds par un seul mot : oui", temperature=0)
     return {"ok": True, "reply": reply.strip()[:50]}
+
+
+@app.post("/api/assistant/chat")
+async def assistant_chat(data: dict):
+    message = str(data.get("message", "")).strip()
+    if not message:
+        return JSONResponse(status_code=400, content={"detail": "Message vide"})
+    history = data.get("history") or []
+    if not isinstance(history, list):
+        history = []
+    return await assistant.assistant_chat(message, history)
 
 
 @app.get("/api/health")

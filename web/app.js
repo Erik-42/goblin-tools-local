@@ -429,6 +429,133 @@ function renderHistory() {
   if (clear) clear.onclick = () => { localStorage.removeItem(LS_HISTORY); renderHistory(); };
 }
 
+/* ============================ assistant "second cerveau" ============================ */
+const LS_ASSISTANT_SESSIONS = "gt_assistant_sessions";
+const LS_ASSISTANT_CURRENT = "gt_assistant_current";
+
+function renderAssistant() {
+  const sessions = loadJSON(LS_ASSISTANT_SESSIONS, {});
+  let current = loadJSON(LS_ASSISTANT_CURRENT, null);
+  if (!current || !sessions[current]) {
+    current = String(Date.now());
+    sessions[current] = {
+      id: current,
+      name: "Nouvelle conversation",
+      updated: Date.now(),
+      messages: [],
+    };
+    saveJSON(LS_ASSISTANT_SESSIONS, sessions);
+    saveJSON(LS_ASSISTANT_CURRENT, current);
+  }
+  const session = sessions[current];
+
+  $app.innerHTML = `
+    <p><a class="back" href="#/">← Tous les outils</a></p>
+    <div class="tool-head">
+      <span class="icon">🧠</span><h1>Second cerveau</h1>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn secondary small" id="asst-new">Nouvelle conversation</button>
+        <button class="btn secondary small" id="asst-now">Maintenant</button>
+      </div>
+    </div>
+    <p class="tool-desc">Pose ta question. Le second cerveau peut mobiliser les outils (découpage, réécriture, estimation, recettes…) pour t'aider à avancer.</p>
+    <div id="asst-messages"></div>
+    <form id="asst-form">
+      <div class="field">
+        <input name="q" id="asst-input" placeholder="Que veux-tu faire ou comprendre ?" />
+      </div>
+      <button class="btn" type="submit">Envoyer</button>
+    </form>
+  `;
+
+  const save = () => {
+    saveJSON(LS_ASSISTANT_SESSIONS, sessions);
+    saveJSON(LS_ASSISTANT_CURRENT, current);
+  };
+
+  const paint = () => {
+    const box = document.getElementById("asst-messages");
+    box.innerHTML = session.messages.map((m) => {
+      const user = m.role === "user";
+      const bubbleStyle = user
+        ? "background:var(--green-light);border-color:var(--green-dark);margin-left:auto"
+        : "";
+      const toolsHtml = (m.tools && m.tools.length)
+        ? `<div class="meta" style="font-size:0.72rem;color:var(--muted);max-width:75%;${user ? "margin-left:auto" : "margin-right:auto"}>${m.tools.map((t) => esc(t)).join(" · ")}</div>`
+        : "";
+      return `<div style="margin:8px 0;${user ? "text-align:right" : "text-align:left"}>
+        <div class="prose" style="display:inline-block;max-width:75%;${bubbleStyle}">${esc(m.content)}</div>
+        ${toolsHtml}
+      </div>`;
+    }).join("");
+    box.scrollTop = box.scrollHeight;
+  };
+
+  const speak = (role, content, tools) => {
+    session.messages.push({ role, content: String(content), time: Date.now(), tools });
+    session.updated = Date.now();
+    if (role === "user" && session.name === "Nouvelle conversation") {
+      session.name = String(content).slice(0, 40);
+    }
+    save();
+    paint();
+  };
+
+  const send = async (text) => {
+    speak("user", text);
+    const input = document.getElementById("asst-input");
+    input.disabled = true;
+    try {
+      const result = await apiCall("/api/assistant/chat", {
+        message: text,
+        history: session.messages,
+      });
+      const tools = result.steps ? result.steps.map((s) => s.tool) : [];
+      speak("assistant", result.reply, tools);
+    } catch (err) {
+      speak("assistant", `⚠️ ${err.message}`);
+    } finally {
+      input.disabled = false;
+      input.focus();
+    }
+  };
+
+  paint();
+
+  document.getElementById("asst-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const input = document.getElementById("asst-input");
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    await send(text);
+  };
+
+  document.getElementById("asst-new").onclick = () => {
+    const id = String(Date.now());
+    sessions[id] = { id, name: "Nouvelle conversation", updated: Date.now(), messages: [] };
+    saveJSON(LS_ASSISTANT_SESSIONS, sessions);
+    saveJSON(LS_ASSISTANT_CURRENT, id);
+    renderAssistant();
+  };
+
+  document.getElementById("asst-now").onclick = () => {
+    let ctx = "";
+    try {
+      const board = MagicTodo.currentList ? MagicTodo.currentList() : null;
+      if (board && board.steps && board.steps.length) {
+        const pending = board.steps.findIndex((s) => !s.done);
+        if (pending !== -1) {
+          ctx = `Tâche en cours (Magic ToDo) : ${board.steps[pending].text}. `;
+        }
+      }
+    } catch { /* ignore */ }
+    const input = document.getElementById("asst-input");
+    input.value = `${ctx}Que devrais-je faire maintenant ? Propose une première action simple et concrète.`;
+    input.focus();
+  };
+}
+
 /* ============================ réglages ============================ */
 async function renderSettings() {
   $app.innerHTML = `
@@ -546,6 +673,7 @@ const ROUTES = {
   history: renderHistory,
   settings: renderSettings,
   taskmaster: renderTaskmaster,
+  assistant: renderAssistant,
 };
 
 function renderMagicBoard() {
