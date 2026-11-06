@@ -20,7 +20,7 @@ DEFAULT_API_KEY = _env("GOBLIN_API_KEY", "")
 DEFAULT_MODEL = _env("GOBLIN_MODEL", "deepseek-chat")
 
 # Déploiement dual LOCAL / SERVEUR
-DEFAULT_MODE = _env("GOBLIN_MODE", "local")           # local | server
+DEFAULT_MODE = _env("GOBLIN_MODE", "server")          # local | server
 DEFAULT_HOST = _env("GOBLIN_HOST", "127.0.0.1")
 DEFAULT_PORT = int(_env("GOBLIN_PORT", "8765"))
 DEFAULT_DATA_DIR = _env("GOBLIN_DATA_DIR", "")

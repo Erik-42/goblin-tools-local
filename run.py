@@ -51,7 +51,7 @@ def main() -> None:
 
     settings = load_settings()
 
-    mode = args.mode or settings.get("mode") or "local"
+    mode = args.mode or settings.get("mode") or "server"
     host = args.host or settings.get("host") or (
         "127.0.0.1" if mode == "local" else "0.0.0.0"
     )

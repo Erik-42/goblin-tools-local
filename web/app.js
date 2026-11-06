@@ -624,7 +624,7 @@ async function renderSettings() {
     <p class="tool-desc" style="margin-top:14px">${t("settings.tip")}</p>
     <div id="set-out"></div>`;
 
-  document.getElementById("set-mode").value = cur.mode || "local";
+  document.getElementById("set-mode").value = cur.mode || "server";
   document.getElementById("set-ai-mode").value = cur.ai_mode || "auto";
 
   async function refreshHealth() {
