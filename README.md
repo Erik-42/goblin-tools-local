@@ -11,6 +11,7 @@ L'IA découpe les tâches en petites étapes faisables — 9 outils du quotidien
 ![Platform](https://img.shields.io/badge/Windows-x64-0078d4?logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-2e9e6b)
 ![Confidentialité](https://img.shields.io/badge/confidentialit%C3%A9-donn%C3%A9es_locales-blueviolet)
+![Version](https://img.shields.io/badge/version-0.1.0-2e9e6b)
 
 Inspiré de [goblin.tools](https://goblin.tools) (outils de découpage de tâches pensés pour le TDAH et la neurodiversité),
 réécrit en application locale : un exe, ou trois paquets Python, suffisent pour tout lancer.
@@ -112,6 +113,25 @@ python -m uvicorn server.main:app --port 8765 --reload   # rechargement à chaqu
 python test/mock_llm.py                                   # faux modèle pour travailler hors ligne
 ```
 
+## 🔖 Versionnage (SemVer)
+
+Ce projet suit le **Versionnage Sémantique (Semantic Versioning, SemVer)** au format **`MAJEUR.MINEUR.CORRECTIF`** (`X.Y.Z`).
+
+| Composant | Quand l'incrémenter |
+|---|---|
+| **MAJEUR** (X) | Changements incompatibles avec les versions précédentes (suppression de fonctionnalité, API cassante, refonte majeure) |
+| **MINEUR** (Y) | Nouvelle fonctionnalité ajoutée sans casser la compatibilité, améliorations mineures |
+| **CORRECTIF** (Z) | Correction de bug ou de sécurité sans ajout de nouvelle fonctionnalité |
+
+Pour les versions **`0.Y.Z`** (développement initial, inférieure à `1.0.0`), tout peut changer à tout moment — aucune garantie de stabilité.
+
+La version courante (`0.1.0`) est :
+- affichée au lancement par `run.py` (`Goblin Tools — édition locale v0.1.0 [...]`) ;
+- exposée par l'endpoint `GET /api/version`, qui renvoie `{"version": "0.1.0"}` ;
+- inscrite dans le fichier `VERSION` à la racine et dans `server/__init__.py` (`__version__`).
+
+Pour le détail des règles (versions `1.0.0`, pré-versions `alpha`/`beta`/`rc`, métadonnées de build `+build`, bonnes pratiques, outils recommandés), consultez [VERSIONING.md](VERSIONING.md).
+
 ## 🙏 Remerciements
 
 - [Goblin Tools](https://goblin.tools) — l'idée produit et la forme des outils
@@ -120,3 +140,4 @@ python test/mock_llm.py                                   # faux modèle pour tr
 ## 📄 Licence
 
 [MIT](LICENSE)
+

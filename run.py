@@ -16,6 +16,7 @@ for _i, _arg in enumerate(sys.argv):
         os.environ["GOBLIN_DATA_DIR"] = sys.argv[_i + 1]
         break
 
+from server import __version__
 from server.main import app
 from server.settings_store import load as load_settings
 
@@ -62,7 +63,7 @@ def main() -> None:
             port = pick_port(port + 1)
 
     url = f"http://{host}:{port}"
-    print(f"Goblin Tools — édition locale [{mode}]  ->  {url}")
+    print(f"Goblin Tools — édition locale v{__version__} [{mode}]  ->  {url}")
     print("Ferme cette fenêtre pour arrêter le service.")
     if host == "127.0.0.1":
         open_browser_later(url)

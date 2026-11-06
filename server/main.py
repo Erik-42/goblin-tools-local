@@ -4,10 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import assistant, llm, local_ai, settings_store, tools
+from . import __version__, assistant, llm, local_ai, settings_store, tools
 from .paths import WEB_DIR
 
-app = FastAPI(title="Goblin Tools Local")
+app = FastAPI(title="Goblin Tools Local", version=__version__)
 
 # ----------------------------------------------------------------- CORS
 _settings = settings_store.load()
@@ -103,6 +103,11 @@ async def assistant_chat(data: dict):
 async def health():
     status = await llm.health(settings_store.load())
     return status
+
+
+@app.get("/api/version")
+async def version():
+    return {"version": __version__}
 
 
 # --------------------------------------------------------------------- tools
