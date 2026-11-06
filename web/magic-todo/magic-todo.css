@@ -51,6 +51,13 @@
   left: 0.35rem;
 }
 
+.magic-todo__substeps {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0 26px;
+  border-left: 2px solid var(--border);
+}
+
 .magic-todo__actions {
   margin-top: 14px;
   display: flex;

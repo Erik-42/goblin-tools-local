@@ -93,14 +93,21 @@
     localStorage.setItem(KEY, JSON.stringify(state));
   }
 
+  function normalizeStep(s) {
+    if (typeof s === "string") {
+      const text = String(s || "").trim();
+      return text ? { text, substeps: [] } : null;
+    }
+    const text = String(s.text || "").trim();
+    if (!text) return null;
+    return {
+      text,
+      substeps: (s.substeps || []).map(normalizeStep).filter(Boolean),
+    };
+  }
+
   function normalize(steps) {
-    return (steps || []).map((s) => ({
-      text: String(s.text || "").trim(),
-      done: !!s.done,
-      substeps: (s.substeps || [])
-        .map((ss) => (typeof ss === "string" ? ss : String(ss.text || "")).trim())
-        .filter(Boolean),
-    })).filter((s) => s.text);
+    return (steps || []).map(normalizeStep).filter(Boolean);
   }
 
   function progress(steps) {
@@ -114,19 +121,26 @@
     return entry.steps.map((s) => ({ text: s.text, substeps: s.substeps.slice() }));
   }
 
+  function renderStepNode(step, number) {
+    const subHtml = step.substeps.map((sub, i) =>
+      renderStepNode(sub, `${number}.${i + 1}`)
+    ).join("");
+    return `
+      <li class="magic-todo__step${step.done ? " magic-todo__step--done" : ""}">
+        <label class="magic-todo__row">
+          <input class="magic-todo__box" type="checkbox" data-step-path="${number}" ${step.done ? "checked" : ""}>
+          <span class="magic-todo__label">${number}. ${esc(step.text)}</span>
+        </label>
+        ${subHtml ? `<ul class="magic-todo__substeps">${subHtml}</ul>` : ""}
+      </li>`;
+  }
+
   function renderResult(entry) {
     return `<div class="magic-todo__result">
       <h2 class="magic-todo__title">${t("magicTodo.result.title")}</h2>
       <p class="magic-todo__progress">${progress(entry.steps)}</p>
       <ul class="magic-todo__steps">
-        ${entry.steps.map((s, i) => `
-          <li class="magic-todo__step${s.done ? " magic-todo__step--done" : ""}">
-            <label class="magic-todo__row">
-              <input class="magic-todo__box" type="checkbox" data-step="${i}" ${s.done ? "checked" : ""}>
-              <span class="magic-todo__label">${i + 1}. ${esc(s.text)}</span>
-            </label>
-            ${s.substeps.map((ss) => `<div class="magic-todo__sub">${esc(ss)}</div>`).join("")}
-          </li>`).join("")}
+        ${entry.steps.map((s, i) => renderStepNode(s, String(i + 1))).join("")}
       </ul>
       <div class="magic-todo__actions">
         <button class="btn secondary small" type="button" id="btn-save-list">${t("magicTodo.result.save")}</button>
@@ -135,30 +149,51 @@
     </div>`;
   }
 
+  function findStepByPath(steps, path) {
+    const parts = path.split(".").map(Number);
+    let node = steps[parts[0] - 1];
+    for (let i = 1; i < parts.length; i++) {
+      node = node.substeps[parts[i] - 1];
+    }
+    return node;
+  }
+
+  function flattenSteps(steps) {
+    let out = [];
+    for (const s of steps || []) {
+      out.push(s.text);
+      out = out.concat(flattenSteps(s.substeps));
+    }
+    return out;
+  }
+
   function mountResult(container, entry, actions) {
     actions = actions || {};
     container.innerHTML = renderResult(entry);
     container.querySelectorAll(".magic-todo__box").forEach((box) => {
       box.addEventListener("change", () => {
-        const index = Number(box.dataset.step);
-        entry.steps[index].done = box.checked;
-        box.closest(".magic-todo__step").classList.toggle("magic-todo__step--done", box.checked);
-        container.querySelector(".magic-todo__progress").textContent = progress(entry.steps);
-        if (actions.onChange) actions.onChange(entry);
+        const path = box.dataset.stepPath;
+        const node = findStepByPath(entry.steps, path);
+        if (node) {
+          node.done = box.checked;
+          box.closest(".magic-todo__step").classList.toggle("magic-todo__step--done", box.checked);
+          container.querySelector(".magic-todo__progress").textContent = progress(entry.steps);
+          if (actions.onChange) actions.onChange(entry);
+        }
       });
     });
     const saveBtn = container.querySelector("#btn-save-list");
     const focusBtn = container.querySelector("#btn-focus");
     if (saveBtn) {
       saveBtn.onclick = () => {
-        addItems([entry.task, ...plain(entry).flatMap((step) => [step.text, ...step.substeps])].filter(Boolean));
-        if (actions.onSave) actions.onSave(entry.task, plain(entry));
+        addItems([entry.task, ...flattenSteps(entry.steps)].filter(Boolean));
+        if (actions.onSave) actions.onSave(entry.task, entry);
         else toast(t("magicTodo.result.save"));
       };
     }
     if (focusBtn) {
       focusBtn.onclick = () => {
-        addItems(plain(entry).map((step) => step.text));
+        addItems(flattenSteps(entry.steps));
         location.hash = "#/taskmaster";
       };
     }
@@ -294,6 +329,15 @@
     return cols;
   }
 
+  function collectSubtaskTexts(row) {
+    let texts = [];
+    for (const s of row.subtasks || []) {
+      texts.push(s.text);
+      texts = texts.concat(collectSubtaskTexts(s));
+    }
+    return texts;
+  }
+
   function exportCsv(tab) {
     const rows = [["text", "done", "deadline", "minutes", "subtasks"]];
     for (const row of tab.items) {
@@ -302,7 +346,7 @@
         row.done ? "1" : "0",
         row.deadline || "",
         row.minutes || "",
-        (row.subtasks || []).map((s) => s.text).join(" · "),
+        collectSubtaskTexts(row).join(" · "),
       ]);
     }
     const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -702,6 +746,12 @@
     }
   }
 
+  function stepToItem(step) {
+    const row = item(step.text);
+    row.subtasks = step.substeps.map(stepToItem);
+    return row;
+  }
+
   async function breakdown(id) {
     busyId = id;
     openMenu = null;
@@ -713,10 +763,7 @@
       const steps = normalize(result.steps);
       commit(() => {
         const target = findItem(state, id);
-        target.subtasks = steps
-          .flatMap((step) => [step.text, ...step.substeps])
-          .filter(Boolean)
-          .map((text) => item(text));
+        target.subtasks = steps.map(stepToItem);
         target.open = true;
         busyId = null;
       });

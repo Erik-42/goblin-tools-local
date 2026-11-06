@@ -19,16 +19,36 @@ def _spice(data: dict, default: int = 3) -> int:
 
 # ---------------------------------------------------------------- Magic ToDo
 MAGIC_TODO_SYSTEM = """Découpe une tâche en étapes. Chaque étape : une phrase, verbe d'action.
-JSON uniquement : {"steps":[{"text":"étape","substeps":["sous-étape"]}]}
+Chaque sous-étape doit être une décomposition concrète de son étape parente (une action qui fait partie de l'étape parente).
+La décomposition est récursive : chaque sous-étape peut elle-même être décomposée en sous-étapes, et ainsi de suite, autant que nécessaire.
+Plus le niveau de détail (spice) est élevé, plus la décomposition est granulaire et profonde.
+JSON uniquement : {"steps":[{"text":"étape","substeps":[{"text":"sous-étape","substeps":[...]}]}]}
 Sans sous-étape, substeps = []. Texte en français."""
 
 SPICE_TODO = {
     1: "Donne 2 ou 3 très grandes étapes, sans sous-étape.",
-    2: "Donne 3 ou 4 étapes simples, presque sans sous-étape.",
-    3: "Donne 4 à 6 étapes concrètes. Une étape lourde peut avoir jusqu'à 2 sous-étapes.",
-    4: "Donne 6 à 8 petites étapes. Découpe ce qui prend plus de quelques minutes.",
-    5: "Donne 8 à 12 toutes petites étapes, chacune faisable en une seule action.",
+    2: "Donne 3 ou 4 étapes simples, avec peu de sous-étapes.",
+    3: "Donne 4 à 6 étapes concrètes. Décompose chaque étape en sous-étapes si nécessaire.",
+    4: "Donne 6 à 8 petites étapes. Décompose récursivement chaque étape en sous-étapes détaillées.",
+    5: "Donne 8 à 12 toutes petites étapes. Décomposition récursive complète et granulaire.",
 }
+
+
+def _parse_step(obj: dict) -> dict | None:
+    text = str(obj.get("text", "")).strip()
+    if not text:
+        return None
+    substeps = []
+    for s in obj.get("substeps", []):
+        if isinstance(s, dict):
+            parsed = _parse_step(s)
+            if parsed:
+                substeps.append(parsed)
+        else:
+            t2 = str(s).strip()
+            if t2:
+                substeps.append({"text": t2, "substeps": []})
+    return {"text": text, "substeps": substeps}
 
 
 async def magic_todo(data: dict):
@@ -47,11 +67,9 @@ async def magic_todo(data: dict):
         for s in parsed.get("steps", []):
             if not isinstance(s, dict):
                 continue
-            text = str(s.get("text", "")).strip()
-            if not text:
-                continue
-            substeps = [str(x).strip() for x in s.get("substeps", []) if str(x).strip()]
-            steps.append({"text": text, "substeps": substeps})
+            step = _parse_step(s)
+            if step:
+                steps.append(step)
         if steps:
             return {"steps": steps}
         last_err = llm.LLMError("Le découpage est vide, réessaie.")
