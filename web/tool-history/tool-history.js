@@ -2,6 +2,8 @@
 (function (global) {
   "use strict";
 
+  const t = (key, params) => I18n.t(key, params);
+
   const KEY = "gt_tool_history";
   const OLD_TODO = "gt_todo_history";
   const MAX = 30;
@@ -26,7 +28,8 @@
   function progressSteps(steps) {
     const n = (steps || []).filter((s) => s.done).length;
     const total = (steps || []).length;
-    return `${n} ${n === 1 ? "faite" : "faites"} sur ${total}`;
+    const key = n === 1 ? "magicTodo.result.progress" : "magicTodo.result.progressMany";
+    return `${t(key, { n })} ${t("magicTodo.result.total", { total })}`;
   }
 
   function migrateTodo() {
@@ -84,15 +87,16 @@
 
   function render(toolId, activeId) {
     const items = list(toolId);
+    const locale = I18n.getLang() === "fr" ? "fr-FR" : "en-US";
     const cards = items.length
       ? items.map((item) => `
           <button type="button" class="tool-history__recall${item.id === activeId ? " tool-history__recall--active" : ""}" data-id="${item.id}">
-            <span class="tool-history__task">${esc(item.label || "Sans titre")}</span>
-            <span class="tool-history__meta">${new Date(item.time).toLocaleString("fr-FR")}${item.meta ? ` · ${esc(item.meta)}` : ""}</span>
+            <span class="tool-history__task">${esc(item.label || t("common.untitled"))}</span>
+            <span class="tool-history__meta">${new Date(item.time).toLocaleString(locale)}${item.meta ? ` · ${esc(item.meta)}` : ""}</span>
           </button>`).join("")
-      : `<p class="tool-history__empty">Aucun résultat pour l'instant. Lance l'outil pour le retrouver ici.</p>`;
+      : `<p class="tool-history__empty">${t("history.recall.empty")}</p>`;
     return `<section class="tool-history">
-      <h2 class="tool-history__title">Historique</h2>
+      <h2 class="tool-history__title">${t("history.recall.title")}</h2>
       <div class="tool-history__list">${cards}</div>
     </section>`;
   }

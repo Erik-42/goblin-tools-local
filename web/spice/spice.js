@@ -2,6 +2,8 @@
 (function (global) {
   "use strict";
 
+  const t = (key, params) => I18n.t(key, params);
+
   function clamp(value) {
     const n = Number(value);
     if (!Number.isFinite(n)) return 3;
@@ -18,11 +20,11 @@
     const name = options.name || "spice";
     container.innerHTML = `
       <div class="spice">
-        <button class="spice__toggle" type="button" aria-expanded="false" aria-label="Niveau de piquant">${peppers(level)}</button>
+        <button class="spice__toggle" type="button" aria-expanded="false" aria-label="${t("spice.label")}">${peppers(level)}</button>
         <div class="spice__panel" hidden>
           <p class="spice__hint">${options.hint || ""}</p>
-          <label class="spice__label">Niveau de piquant
-            <input class="spice__slider" type="range" min="1" max="5" step="1" value="${level}" aria-label="Niveau de piquant">
+          <label class="spice__label">${t("spice.label")}
+            <input class="spice__slider" type="range" min="1" max="5" step="1" value="${level}" aria-label="${t("spice.label")}">
           </label>
           <div class="spice__scale"><span>🌶️</span><span>🌶️🌶️🌶️🌶️🌶️</span></div>
         </div>

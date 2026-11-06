@@ -8,6 +8,7 @@ const LS_FOCUS = "gt_focus";           // file Taskmaster {listId, idx, done, sk
 const LS_THEME = "gt_theme";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const t = (key, params) => I18n.t(key, params);
 
 function toast(msg, ms = 2200) {
   const t = document.getElementById("toast");
@@ -16,6 +17,8 @@ function toast(msg, ms = 2200) {
   clearTimeout(t._timer);
   t._timer = setTimeout(() => (t.hidden = true), ms);
 }
+// Rend `toast` utilisable depuis les modules chargés avant app.js.
+window.toast = toast;
 
 function loadJSON(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
@@ -90,116 +93,116 @@ function fmtMinutes(m) {
 /* ============================ outils ============================ */
 const TOOLS = {
   "magic-todo": {
-    icon: "✅", name: "Magic ToDo", desc: "Découpe les choses à faire",
+    icon: "✅", name: t("tools.magic-todo.name"), desc: t("tools.magic-todo.desc"),
   },
   formalizer: {
-    icon: "✍️", name: "Formalizer", desc: "Change le ton d'un texte",
+    icon: "✍️", name: t("tools.formalizer.name"), desc: t("tools.formalizer.desc"),
   },
   judge: {
-    icon: "⚖️", name: "Judge", desc: "Lit l'émotion d'un texte",
-    help: "Colle un message. Juger décrit l'impression qu'il donne. Proposer une réponse écrit un message que tu pourrais renvoyer. Ajouter sert à coller un second message du même échange.",
+    icon: "⚖️", name: t("tools.judge.name"), desc: t("tools.judge.desc"),
+    help: t("judge.help"),
     fields: [
-      { name: "text", label: "Écris ton texte ici…", type: "textarea", placeholder: "Par exemple : un message « passe me voir dans mon bureau quand tu as cinq minutes. »" },
-      { name: "extra", label: "Autre message", type: "textarea", placeholder: "Un autre message du même échange", optionalToggle: "Ajouter", required: false },
+      { name: "text", label: t("judge.field.text"), type: "textarea", placeholder: t("judge.field.text.placeholder") },
+      { name: "extra", label: t("judge.field.extra"), type: "textarea", placeholder: t("judge.field.extra.placeholder"), optionalToggle: t("judge.toggle.extra"), required: false },
     ],
     actions: [
-      { mode: "judge", label: "Juger" },
-      { mode: "reply", label: "Proposer une réponse", secondary: true },
+      { mode: "judge", label: t("judge.action.judge") },
+      { mode: "reply", label: t("judge.action.reply"), secondary: true },
     ],
     endpoint: "/api/judge",
     resultInput: (v) => v.text,
     summary: (r) => r.tone || r.impression || "",
     render: (r) => `
       <div class="result">
-        <label>Ton texte donne l'impression de…</label>
+        <label>${t("judge.result.impression")}</label>
         <div class="prose" id="judge-impression">${esc(r.impression || r.summary || "")}</div>
-        ${r.reply ? `<label>Réponse possible</label><div class="prose" id="judge-reply">${esc(r.reply)}</div>
-          <button class="copy-text" type="button" data-copy-target="#judge-reply">Copier</button>` : ""}
+        ${r.reply ? `<label>${t("judge.result.reply")}</label><div class="prose" id="judge-reply">${esc(r.reply)}</div>
+          <button class="copy-text" type="button" data-copy-target="#judge-reply">${t("common.copy")}</button>` : ""}
       </div>`,
   },
   professor: {
-    icon: "🎓", name: "Professor", desc: "Explique n'importe quoi",
-    help: "Écris un sujet. Le piquant règle le niveau de détail. Tu obtiens une explication, puis un exemple.",
-    submitLabel: "Expliquer",
+    icon: "🎓", name: t("tools.professor.name"), desc: t("tools.professor.desc"),
+    help: t("professor.help"),
+    submitLabel: t("professor.submit"),
     fields: [
-      { name: "topic", label: "Écris un sujet ici…", type: "textarea", placeholder: "Par exemple : comment fonctionne un four" },
-      { name: "spice", type: "spice", hint: "Niveau de piquant : jusqu'où détailler l'explication.", default: 3 },
+      { name: "topic", label: t("professor.field.topic"), type: "textarea", placeholder: t("professor.field.topic.placeholder") },
+      { name: "spice", type: "spice", hint: t("professor.spice.hint"), default: 3 },
     ],
     endpoint: "/api/professor",
     resultInput: (v) => v.topic,
     summary: (r) => String(r.explanation || r.summary || "").slice(0, 80),
     render: (r) => `
       <div class="result">
-        <label>L'explication</label>
+        <label>${t("professor.result.explanation")}</label>
         <div class="prose">${esc(r.explanation || r.summary || "")}</div>
-        ${r.example ? `<label>Avec un exemple</label><div class="prose">${esc(r.example)}</div>` : ""}
+        ${r.example ? `<label>${t("professor.result.example")}</label><div class="prose">${esc(r.example)}</div>` : ""}
         ${(r.points || []).map((p) => `<div class="step"><b>${esc(p.title)}</b><div class="substep" style="padding-left:0">${esc(p.body)}</div></div>`).join("")}
       </div>`,
   },
   consultant: {
-    icon: "💡", name: "Consultant", desc: "Aide à décider",
-    help: "Décris ce qui te fait hésiter. Tu obtiens les avantages, les inconvénients, puis un conseil.",
-    submitLabel: "Donner un conseil",
+    icon: "💡", name: t("tools.consultant.name"), desc: t("tools.consultant.desc"),
+    help: t("consultant.help"),
+    submitLabel: t("consultant.submit"),
     fields: [
-      { name: "situation", label: "Écris la situation ici…", type: "textarea", placeholder: "Par exemple : ce week-end, je finis le dossier ou je vais au concert" },
+      { name: "situation", label: t("consultant.field.situation"), type: "textarea", placeholder: t("consultant.field.situation.placeholder") },
     ],
     endpoint: "/api/consultant",
     resultInput: (v) => v.situation,
     summary: (r) => String(r.advice || r.recommendation || "").slice(0, 80),
     render: (r) => `
       <div class="result">
-        <label>Avantages</label><div class="prose">${esc(r.pros || "")}</div>
-        <label>Inconvénients</label><div class="prose">${esc(r.cons || "")}</div>
-        <label>Le conseil</label><div class="prose">${esc(r.advice || r.recommendation || "")}</div>
+        <label>${t("consultant.result.pros")}</label><div class="prose">${esc(r.pros || "")}</div>
+        <label>${t("consultant.result.cons")}</label><div class="prose">${esc(r.cons || "")}</div>
+        <label>${t("consultant.result.advice")}</label><div class="prose">${esc(r.advice || r.recommendation || "")}</div>
       </div>`,
   },
   estimator: {
-    icon: "⏱️", name: "Estimator", desc: "Devine combien de temps prendra une activité",
-    help: "Décris une activité. Le piquant règle le niveau de prudence de la durée.",
-    submitLabel: "Estimer",
+    icon: "⏱️", name: t("tools.estimator.name"), desc: t("tools.estimator.desc"),
+    help: t("estimator.help"),
+    submitLabel: t("estimator.submit"),
     fields: [
-      { name: "task", label: "Écris une activité ici…", type: "textarea", placeholder: "Par exemple : nettoyer l'appartement et lancer une machine" },
-      { name: "spice", type: "spice", hint: "Niveau de piquant : à quel point détailler la durée.", default: 2 },
+      { name: "task", label: t("estimator.field.task"), type: "textarea", placeholder: t("estimator.field.task.placeholder") },
+      { name: "spice", type: "spice", hint: t("estimator.spice.hint"), default: 2 },
     ],
     endpoint: "/api/estimator",
     resultInput: (v) => v.task,
     summary: (r) => r.rough || fmtMinutes(r.total_minutes),
-    render: (r) => `<div class="result"><label>Ça prendra à peu près…</label><div class="prose">${esc(r.rough || fmtMinutes(r.total_minutes))}</div></div>`,
+    render: (r) => `<div class="result"><label>${t("estimator.result.about")}</label><div class="prose">${esc(r.rough || fmtMinutes(r.total_minutes))}</div></div>`,
   },
   compiler: {
-    icon: "🧠", name: "Compiler", desc: "Transforme un vrac d'idées en tâches",
-    help: "Vide tout ce qui tourne dans ta tête. Le résultat est une liste d'actions, que tu peux envoyer dans Magic ToDo.",
-    submitLabel: "Transformer en tâches",
-    fields: [{ name: "brainstorm", label: "Écris ton vrac ici…", type: "textarea", placeholder: "Écris n'importe comment, plus c'est en vrac, mieux c'est…" }],
+    icon: "🧠", name: t("tools.compiler.name"), desc: t("tools.compiler.desc"),
+    help: t("compiler.help"),
+    submitLabel: t("compiler.submit"),
+    fields: [{ name: "brainstorm", label: t("compiler.field.brainstorm"), type: "textarea", placeholder: t("compiler.field.brainstorm.placeholder") }],
     endpoint: "/api/compiler",
     resultInput: (v) => v.brainstorm,
     summary: (r) => plural((r.actions || []).length, "action", "actions"),
-    render: (r) => `<div class="result"><h2>Tâches</h2>
+    render: (r) => `<div class="result"><h2>${t("compiler.result.actions")}</h2>
       <ul class="step-list">${(r.actions || []).map((a) => `<li class="step"><b>${esc(a.text)}</b>${a.category ? `<span class="tag" style="margin-left:8px">${esc(a.category)}</span>` : ""}</li>`).join("")}</ul>
-      <button class="btn secondary" type="button" id="compiler-send">Ajouter à Magic ToDo</button></div>`,
+      <button class="btn secondary" type="button" id="compiler-send">${t("compiler.send")}</button></div>`,
   },
   chef: {
-    icon: "👨‍🍳", name: "Chef", desc: "Compose une recette avec ce que tu as",
-    help: "Écris les ingrédients, et aussi le nombre de personnes, le temps ou un régime si tu veux. Le résultat se copie.",
-    submitLabel: "Suggérer",
+    icon: "👨‍🍳", name: t("tools.chef.name"), desc: t("tools.chef.desc"),
+    help: t("chef.help"),
+    submitLabel: t("chef.submit"),
     fields: [
-      { name: "ingredients", label: "Ingrédients et contraintes", type: "textarea", placeholder: "Écris ce que tu as, et aussi un régime, un nombre de personnes, un temps…" },
+      { name: "ingredients", label: t("chef.field.ingredients"), type: "textarea", placeholder: t("chef.field.ingredients.placeholder") },
     ],
     endpoint: "/api/chef",
     resultInput: (v) => v.ingredients,
     summary: (r) => (r.recipes || []).map((recipe) => recipe.name).filter(Boolean).join(", "),
     render: (r) => {
       const text = (r.recipes || []).map((rc) => [rc.name, rc.description, ...(rc.steps || [])].filter(Boolean).join("\n")).join("\n\n");
-      return `<div class="result"><label>Tu pourrais cuisiner…</label>
+      return `<div class="result"><label>${t("chef.result.cook")}</label>
         <div class="prose" id="chef-output">${esc(text)}</div>
-        <button class="copy-text" type="button" data-copy-target="#chef-output">Copier</button></div>`;
+        <button class="copy-text" type="button" data-copy-target="#chef-output">${t("chef.copy")}</button></div>`;
     },
   },
 };
 
 const HOME_CARDS = [
   ["magic-todo"], ["formalizer"], ["judge"],
-  ["taskmaster", { icon: "⏯️", name: "Taskmaster", desc: "Une seule tâche à la fois", badge: "Nouveau" }],
+  ["taskmaster", { icon: "⏯️", name: t("tools.taskmaster.name"), desc: t("tools.taskmaster.desc"), badge: t("common.new") }],
   ["professor"], ["consultant"], ["estimator"], ["compiler"], ["chef"],
 ];
 
@@ -246,6 +249,7 @@ function renderToolPage(id) {
       </div>
     </form>
     <div id="out"></div>
+    <button class="btn secondary small" type="button" id="tool-share">${t("common.share")}</button>
     <div id="tool-history"></div>`;
   $app.querySelectorAll("[data-spice]").forEach((slot) => {
     Spice.mount(slot, { name: slot.dataset.spice, value: slot.dataset.spiceValue, hint: slot.dataset.spiceHint });
@@ -276,6 +280,18 @@ function renderToolPage(id) {
     const out = document.getElementById("out");
     out.innerHTML = tool.render(entry.result);
     CopyText.bind(out, toast);
+    const share = document.getElementById("tool-share");
+    if (share) {
+      share.onclick = async () => {
+        const text = out.textContent || "";
+        try {
+          await navigator.clipboard.writeText(text);
+          toast(t("app.toast.copied"));
+        } catch {
+          toast(t("app.toast.copyFailed"));
+        }
+      };
+    }
     const send = document.getElementById("compiler-send");
     if (send) send.onclick = () => MagicTodo.addItems((entry.result.actions || []).map((action) => action.text));
     paintHistory(entry.id);
@@ -291,12 +307,12 @@ function renderToolPage(id) {
     for (const f of tool.fields) {
       if (f.type === "spice" || f.required === false) continue;
       if (!String(values[f.name] || "").trim() && f.name !== "options" && f.name !== "constraints") {
-        toast(`Commence par remplir « ${f.label} »`);
+        toast(t("app.error.fill", { label: f.label }));
         return;
       }
     }
     const out = document.getElementById("out");
-    out.innerHTML = `<div class="loading" style="margin-top:24px"><span class="spinner"></span>Le gobelin prépare sa magie…</div>`;
+    out.innerHTML = `<div class="loading" style="margin-top:24px"><span class="spinner"></span>${t("app.toast.preparing")}</div>`;
     const body = tool.buildBody ? tool.buildBody(values) : values;
     try {
       const result = await apiCall(tool.endpoint, body);
@@ -309,7 +325,7 @@ function renderToolPage(id) {
       }));
     } catch (err) {
       out.innerHTML = `<div class="alert">⚠️ ${esc(err.message)}
-        ${err.code === "not_configured" ? ' <a href="#/settings">Ouvrir les réglages →</a>' : ""}</div>`;
+        ${err.code === "not_configured" ? ` <a href="#/settings">${t("settings.title")} →</a>` : ""}</div>`;
     }
   };
 }
@@ -321,12 +337,12 @@ function renderTaskmaster() {
     ? [{ id: board.id, name: board.name, steps: board.steps }]
     : loadJSON(LS_LISTS, []);
   $app.innerHTML = `
-    <p><a class="back" href="#/">← Tous les outils</a></p>
-    <div class="tool-head"><span class="icon">⏯️</span><h1>Taskmaster</h1><span class="badge-new">Nouveau</span>
-      <div class="tool-help"><button class="tool-help__toggle" type="button" aria-expanded="false">Aide ?</button>
+    <p><a class="back" href="#/">${t("app.back")}</a></p>
+    <div class="tool-head"><span class="icon">⏯️</span><h1>${t("taskmaster.title")}</h1><span class="badge-new">${t("common.new")}</span>
+      <div class="tool-help"><button class="tool-help__toggle" type="button" aria-expanded="false">${t("help.toggle")}</button>
         <p class="tool-help__text" hidden>Une seule tâche de l'onglet Magic ToDo en cours. Coche-la, puis passe à la suivante.</p></div>
     </div>
-    <p class="tool-desc">Ta mission, si tu l'acceptes</p>
+    <p class="tool-desc">${t("taskmaster.desc")}</p>
     <div id="tm-body"></div>`;
   ToolHelp.bind($app);
   const body = document.getElementById("tm-body");
@@ -347,14 +363,14 @@ function renderTaskmaster() {
   const activeList = focus && lists.find((l) => l.id === focus.listId);
 
   if (!lists.length || !lists[0].steps.length) {
-    body.innerHTML = `<div class="panel">Rien dans cet onglet pour l'instant. Ajoute d'abord des éléments dans <a href="#/magic-todo">Magic ToDo</a>.</div>`;
+    body.innerHTML = `<div class="panel">${t("taskmaster.empty")}</div>`;
     return;
   }
 
   if (!activeList) {
-    body.innerHTML = `<div class="panel"><div class="field"><label>Choisir la liste à suivre</label>
+    body.innerHTML = `<div class="panel"><div class="field"><label>${t("taskmaster.pick")}</label>
       <select id="tm-pick">${lists.map((l) => `<option value="${l.id}">${esc(l.name)} (${plural(l.steps.length, "étape", "étapes")})</option>`).join("")}</select></div>
-      <button class="btn" id="tm-start">Lancer le focus ⏯️</button></div>`;
+      <button class="btn" id="tm-start">${t("taskmaster.start")}</button></div>`;
     document.getElementById("tm-start").onclick = () => {
       saveJSON(LS_FOCUS, { listId: Number(document.getElementById("tm-pick").value), idx: 0, done: 0, skipped: 0 });
       renderTaskmaster();
@@ -364,10 +380,10 @@ function renderTaskmaster() {
 
   const total = activeList.steps.length;
   if (focus.idx >= total) {
-    body.innerHTML = `<div class="focus-card"><div class="done-msg">🎉 Tout est fait !</div>
+    body.innerHTML = `<div class="focus-card"><div class="done-msg">🎉 ${t("taskmaster.done")}</div>
       <p class="sub-hint">${plural(focus.done, "terminée", "terminées")} · ${plural(focus.skipped, "passée", "passées")}</p>
-      <div class="focus-actions"><button class="btn secondary" id="tm-again">Recommencer</button>
-      <button class="btn" id="tm-exit">Quitter le focus</button></div></div>`;
+      <div class="focus-actions"><button class="btn secondary" id="tm-again">${t("taskmaster.restart")}</button>
+      <button class="btn" id="tm-exit">${t("taskmaster.exit")}</button></div></div>`;
     document.getElementById("tm-again").onclick = () => { saveJSON(LS_FOCUS, { ...focus, idx: 0, done: 0, skipped: 0 }); renderTaskmaster(); };
     document.getElementById("tm-exit").onclick = () => { localStorage.removeItem(LS_FOCUS); renderTaskmaster(); };
     return;
@@ -376,17 +392,17 @@ function renderTaskmaster() {
   const step = activeList.steps[focus.idx];
   body.innerHTML = `
     <div class="focus-card">
-      <div style="color:var(--muted)">« ${esc(activeList.name)} » · étape ${focus.idx + 1} / ${total}</div>
+      <div style="color:var(--muted)">« ${esc(activeList.name)} » · ${t("taskmaster.stepOf", { idx: focus.idx + 1, total })}</div>
       <div class="step-text">${esc(step.text)}</div>
       ${step.substeps.length ? `<div class="sub-hint">${step.substeps.map(esc).join("\n")}</div>` : ""}
       <div class="focus-actions">
-        <button class="btn" id="tm-done">✅ C'est fait</button>
-        <button class="btn secondary" id="tm-skip">⏭️ Passer</button>
+        <button class="btn" id="tm-done">${t("taskmaster.doneLabel")}</button>
+        <button class="btn secondary" id="tm-skip">${t("taskmaster.skipLabel")}</button>
       </div>
       <div class="progress"><i style="width:${(focus.idx / total) * 100}%"></i></div>
       <div style="color:var(--muted);font-size:0.85rem">${plural(focus.done, "faite", "faites")} · ${plural(focus.skipped, "passée", "passées")}</div>
     </div>
-    <div style="margin-top:14px"><button class="btn secondary small" id="tm-exit">Quitter le focus</button></div>`;
+    <div style="margin-top:14px"><button class="btn secondary small" id="tm-exit">${t("taskmaster.exit")}</button></div>`;
   const next = (inc) => {
     if (inc === "done" && step.itemId) MagicTodo.markItem(activeList.id, step.itemId, true);
     saveJSON(LS_FOCUS, { ...focus, idx: focus.idx + 1, done: focus.done + (inc === "done" ? 1 : 0), skipped: focus.skipped + (inc === "skip" ? 1 : 0) });
@@ -400,7 +416,7 @@ function renderTaskmaster() {
 /* ============================ accueil ============================ */
 function renderHome() {
   $app.innerHTML = `
-    <p class="tagline">Quand ça paraît <strong>trop grand, trop compliqué</strong>, le gobelin te file un coup de main.</p>
+    <p class="tagline">${t("app.tagline")}</p>
     <div class="grid">
       ${HOME_CARDS.map(([id, custom]) => {
         const info = custom || TOOLS[id];
@@ -417,14 +433,14 @@ function renderHome() {
 function renderHistory() {
   const hist = loadJSON(LS_HISTORY, []);
   $app.innerHTML = `
-    <p><a class="back" href="#/">← Tous les outils</a></p>
-    <div class="tool-head"><span class="icon">🕘</span><h1>Historique</h1></div>
+    <p><a class="back" href="#/">${t("app.back")}</a></p>
+    <div class="tool-head"><span class="icon">🕘</span><h1>${t("history.title")}</h1></div>
     <p class="tool-desc">${plural(hist.length, "résultat récent enregistré", "résultats récents enregistrés")} dans ce navigateur.</p>
     ${hist.length ? `<div class="panel">
       ${hist.map((h) => `<div class="hist-item"><b>${esc(h.tool)}</b> · ${esc(h.input)}
         <div class="meta">${new Date(h.time).toLocaleString("fr-FR")}</div></div>`).join("")}
-      <div style="margin-top:14px"><button class="btn secondary small" id="hist-clear">Effacer l'historique</button></div>
-    </div>` : `<div class="panel">Pas encore d'historique. Essaie un outil.</div>`}`;
+      <div style="margin-top:14px"><button class="btn secondary small" id="hist-clear">${t("history.clear")}</button></div>
+    </div>` : `<div class="panel">${t("history.empty")}</div>`}`;
   const clear = document.getElementById("hist-clear");
   if (clear) clear.onclick = () => { localStorage.removeItem(LS_HISTORY); renderHistory(); };
 }
@@ -440,7 +456,7 @@ function renderAssistant() {
     current = String(Date.now());
     sessions[current] = {
       id: current,
-      name: "Nouvelle conversation",
+      name: t("assistant.new"),
       updated: Date.now(),
       messages: [],
     };
@@ -450,21 +466,21 @@ function renderAssistant() {
   const session = sessions[current];
 
   $app.innerHTML = `
-    <p><a class="back" href="#/">← Tous les outils</a></p>
+    <p><a class="back" href="#/">${t("app.back")}</a></p>
     <div class="tool-head">
-      <span class="icon">🧠</span><h1>Second cerveau</h1>
+      <span class="icon">🧠</span><h1>${t("assistant.title")}</h1>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <button class="btn secondary small" id="asst-new">Nouvelle conversation</button>
-        <button class="btn secondary small" id="asst-now">Maintenant</button>
+        <button class="btn secondary small" id="asst-new">${t("assistant.new")}</button>
+        <button class="btn secondary small" id="asst-now">${t("assistant.now")}</button>
       </div>
     </div>
-    <p class="tool-desc">Pose ta question. Le second cerveau peut mobiliser les outils (découpage, réécriture, estimation, recettes…) pour t'aider à avancer.</p>
+    <p class="tool-desc">${t("assistant.desc")}</p>
     <div id="asst-messages"></div>
     <form id="asst-form">
       <div class="field">
-        <input name="q" id="asst-input" placeholder="Que veux-tu faire ou comprendre ?" />
+        <input name="q" id="asst-input" placeholder="${t("assistant.placeholder")}" />
       </div>
-      <button class="btn" type="submit">Envoyer</button>
+      <button class="btn" type="submit">${t("assistant.send")}</button>
     </form>
   `;
 
@@ -494,7 +510,7 @@ function renderAssistant() {
   const speak = (role, content, tools) => {
     session.messages.push({ role, content: String(content), time: Date.now(), tools });
     session.updated = Date.now();
-    if (role === "user" && session.name === "Nouvelle conversation") {
+    if (role === "user" && session.name === t("assistant.new")) {
       session.name = String(content).slice(0, 40);
     }
     save();
@@ -551,7 +567,7 @@ function renderAssistant() {
       }
     } catch { /* ignore */ }
     const input = document.getElementById("asst-input");
-    input.value = `${ctx}Que devrais-je faire maintenant ? Propose une première action simple et concrète.`;
+    input.value = `${ctx}${t("assistant.nowPrompt")}`;
     input.focus();
   };
 }
@@ -559,10 +575,10 @@ function renderAssistant() {
 /* ============================ réglages ============================ */
 async function renderSettings() {
   $app.innerHTML = `
-    <p><a class="back" href="#/">← Tous les outils</a></p>
-    <div class="tool-head"><span class="icon">⚙️</span><h1>Réglages</h1></div>
-    <p class="tool-desc">Configuration du déploiement et du fournisseur IA.</p>
-    <div class="panel"><div id="set-loading" class="loading"><span class="spinner"></span>Lecture de la configuration…</div></div>`;
+    <p><a class="back" href="#/">${t("app.back")}</a></p>
+    <div class="tool-head"><span class="icon">⚙️</span><h1>${t("settings.title")}</h1></div>
+    <p class="tool-desc">${t("settings.desc")}</p>
+    <div class="panel"><div id="set-loading" class="loading"><span class="spinner"></span>${t("settings.loading")}</div></div>`;
 
   let cur;
   try { cur = await apiCall("/api/settings", undefined, "GET"); } catch (err) {
@@ -581,31 +597,31 @@ async function renderSettings() {
       <span id="set-health" class="ai-status"></span>
       <span id="set-health-text" class="tool-desc">―</span>
     </div>
-    <div class="field"><label>Mode déploiement</label>
+    <div class="field"><label>${t("settings.mode")}</label>
       <select id="set-mode">
-        <option value="local">Local (127.0.0.1 seulement)</option>
-        <option value="server">Serveur (toutes interfaces)</option>
+        <option value="local">${t("settings.mode.local")}</option>
+        <option value="server">${t("settings.mode.server")}</option>
       </select></div>
-    <div class="field"><label>Mode IA</label>
+    <div class="field"><label>${t("settings.aiMode")}</label>
       <select id="set-ai-mode">
-        <option value="auto">Auto (distant si réseau, sinon local)</option>
-        <option value="distant">Distant (API configurée)</option>
-        <option value="local">Local (Ollama)</option>
+        <option value="auto">${t("settings.aiMode.auto")}</option>
+        <option value="distant">${t("settings.aiMode.distant")}</option>
+        <option value="local">${t("settings.aiMode.local")}</option>
       </select></div>
-    <div class="field"><label>Host</label><input type="text" id="set-host" value="${esc(cur.host)}" /></div>
-    <div class="field"><label>Port</label><input type="text" id="set-port" value="${esc(cur.port)}" /></div>
-    <div class="field"><label>Répertoire de données</label><input type="text" id="set-data-dir" placeholder="par défaut : à côté de l'exe" value="${esc(cur.data_dir || "")}" /></div>
-    <div class="field"><label>Jeton d'authentification (Bearer)</label><input type="password" id="set-auth-token" placeholder="laisser vide pour conserver" autocomplete="off" /></div>
-    <div class="field"><label>Origines CORS (virgulées)</label><input type="text" id="set-cors" placeholder="vide = strict" value="${esc(cur.cors_origins)}" /></div>
-    <div class="field"><label><span class="status-dot ${cur.has_key ? "ok" : "no"}"></span>Clé API ${cur.has_key ? `(actuelle : ${esc(cur.api_key_masked)})` : "(non définie)"}</label>
-      <input type="password" id="set-key" placeholder="sk-…  laisser vide pour conserver la clé" autocomplete="off" /></div>
-    <div class="field"><label>URL de base</label><input type="text" id="set-url" value="${esc(cur.base_url)}" /></div>
-    <div class="field"><label>Nom du modèle</label><input type="text" id="set-model" value="${esc(cur.model)}" /></div>
+    <div class="field"><label>${t("settings.host")}</label><input type="text" id="set-host" value="${esc(cur.host)}" /></div>
+    <div class="field"><label>${t("settings.port")}</label><input type="text" id="set-port" value="${esc(cur.port)}" /></div>
+    <div class="field"><label>${t("settings.dataDir")}</label><input type="text" id="set-data-dir" placeholder="${t("settings.dataDir.placeholder")}" value="${esc(cur.data_dir || "")}" /></div>
+    <div class="field"><label>${t("settings.authToken")}</label><input type="password" id="set-auth-token" placeholder="${t("settings.authToken.placeholder")}" autocomplete="off" /></div>
+    <div class="field"><label>${t("settings.cors")}</label><input type="text" id="set-cors" placeholder="${t("settings.cors.placeholder")}" value="${esc(cur.cors_origins)}" /></div>
+    <div class="field"><label><span class="status-dot ${cur.has_key ? "ok" : "no"}"></span>${t("settings.apiKey")} ${cur.has_key ? t("settings.apiKey.current", { masked: esc(cur.api_key_masked) }) : t("settings.apiKey.none")}</label>
+      <input type="password" id="set-key" placeholder="${t("settings.apiKey.placeholder")}" autocomplete="off" /></div>
+    <div class="field"><label>${t("settings.baseUrl")}</label><input type="text" id="set-url" value="${esc(cur.base_url)}" /></div>
+    <div class="field"><label>${t("settings.model")}</label><input type="text" id="set-model" value="${esc(cur.model)}" /></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn" id="set-save">Enregistrer</button>
-      <button class="btn secondary" id="set-test">🔌 Tester la connexion</button>
+      <button class="btn" id="set-save">${t("settings.save")}</button>
+      <button class="btn secondary" id="set-test">🔌 ${t("settings.test")}</button>
     </div>
-    <p class="tool-desc" style="margin-top:14px">Astuce : Ollama local utilise <code>http://127.0.0.1:11434/v1</code>. En mode serveur, définissez GOBLIN_AUTH_TOKEN pour protéger les appels API.</p>
+    <p class="tool-desc" style="margin-top:14px">${t("settings.tip")}</p>
     <div id="set-out"></div>`;
 
   document.getElementById("set-mode").value = cur.mode || "local";
@@ -649,7 +665,7 @@ async function renderSettings() {
     await apiCall("/api/settings", body, "PUT");
     document.getElementById("set-key").value = "";
     document.getElementById("set-auth-token").value = "";
-    toast("Enregistré ✅");
+    toast(t("settings.saved"));
   };
   document.getElementById("set-save").onclick = async () => {
     try { await save(); } catch (err) { document.getElementById("set-out").innerHTML = `<div class="alert">${esc(err.message)}</div>`; }
@@ -690,6 +706,27 @@ function route() {
   renderHome();
 }
 
+// Rendu de la route courante quand la langue change (appelé par I18n.setLang).
+globalThis.__gt_retranslate = () => route();
+
+function initLangToggle() {
+  const btn = document.getElementById("lang-toggle");
+  if (!btn) return;
+  const refresh = () => {
+    const lang = I18n.getLang();
+    btn.textContent = lang === "fr" ? "🇫🇷" : "🇬🇧";
+    btn.title = lang === "fr" ? t("app.lang.en") : t("app.lang.fr");
+    btn.setAttribute("aria-label", btn.title);
+    btn.setAttribute("aria-pressed", lang === "en" ? "true" : "false");
+  };
+  refresh();
+  btn.addEventListener("click", () => {
+    const next = I18n.getLang() === "fr" ? "en" : "fr";
+    I18n.setLang(next);
+    refresh();
+  });
+}
+
 // ----------------------------------------------------------------- santé IA
 async function fetchHealth() {
   try {
@@ -712,5 +749,6 @@ function startHealthPoll() {
 
 startHealthPoll();
 initThemeToggle();
+initLangToggle();
 window.addEventListener("hashchange", route);
 route();

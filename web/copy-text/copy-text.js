@@ -2,6 +2,8 @@
 (function (global) {
   "use strict";
 
+  const t = (key, params) => I18n.t(key, params);
+
   function bind(root, notify) {
     root.querySelectorAll("[data-copy-target]").forEach((button) => {
       if (button.dataset.copyBound) return;
@@ -11,9 +13,9 @@
         const text = target ? target.textContent : "";
         try {
           await navigator.clipboard.writeText(text);
-          if (notify) notify("Copié");
+          if (notify) notify(t("app.toast.copied"));
         } catch {
-          if (notify) notify("La copie a échoué");
+          if (notify) notify(t("app.toast.copyFailed"));
         }
       });
     });

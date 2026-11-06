@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Goblin Tools — édition locale</title>
+  <title data-i18n="app.title">Goblin Tools — édition locale</title>
   <link rel="stylesheet" href="/style.css" />
   <link rel="stylesheet" href="/spice/spice.css" />
   <link rel="stylesheet" href="/magic-todo/magic-todo.css" />
@@ -29,22 +29,22 @@
     </a>
     <nav class="nav">
       <button type="button" id="theme-toggle" class="theme-toggle" title="Passer au mode sombre" aria-label="Passer au mode sombre" aria-pressed="false">🌙</button>
+      <button type="button" id="lang-toggle" class="theme-toggle" title="Passer en anglais" aria-label="Passer en anglais" aria-pressed="false">🇫🇷</button>
       <span id="ai-status" class="ai-status" title="Statut du fournisseur IA" aria-label="Statut du fournisseur IA">●</span>
-      <a href="#/history" title="Historique">🕘</a>
-      <a href="#/assistant" title="Second cerveau">🧠</a>
-      <a href="#/settings" title="Réglages">⚙️</a>
+      <a href="#/history" data-i18n-attr="title|app.nav.history" title="Historique">🕘</a>
+      <a href="#/assistant" data-i18n-attr="title|app.nav.assistant" title="Second cerveau">🧠</a>
+      <a href="#/settings" data-i18n-attr="title|app.nav.settings" title="Réglages">⚙️</a>
     </nav>
   </header>
 
   <main id="app" class="container"></main>
 
-  <footer class="foot">
-    <span>Quand ça paraît trop grand, trop compliqué · inspiré de goblin.tools</span>
-  </footer>
+  <footer class="foot" data-i18n="app.footer">Quand ça paraît trop grand, trop compliqué · inspiré de goblin.tools</footer>
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="/spice/spice.js"></script>
+  <script src="/i18n.js"></script>
+<script src="/spice/spice.js"></script>
   <script src="/tool-help/tool-help.js"></script>
   <script src="/copy-text/copy-text.js"></script>
   <script src="/magic-todo/magic-todo.js"></script>

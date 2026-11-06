@@ -2,34 +2,36 @@
 (function (global) {
   "use strict";
 
+  const t = (key, params) => I18n.t(key, params);
+
   const FAV_KEY = "gt_formalizer_favs";
   const TONES = [
-    ["more-professional", "Plus professionnel"],
-    ["more-technical", "Plus technique"],
-    ["more-accessible", "Plus accessible"],
-    ["more-polite", "Plus poli"],
-    ["less-snarky", "Moins piquant"],
-    ["angrier", "Plus en colère"],
-    ["easier-to-read", "Plus facile à lire"],
-    ["more-formal", "Plus formel"],
-    ["more-informal", "Plus informel"],
-    ["more-sociable", "Plus sociable (bavard)"],
-    ["more-to-the-point", "Plus direct (moins de blabla)"],
-    ["less-emotional", "Moins émotionnel"],
-    ["more-passionate", "Plus passionné"],
-    ["more-sarcastic", "Plus sarcastique"],
-    ["grammatically-correct", "Grammaticalement correct"],
-    ["bullet-points", "En puces"],
-    ["single-word", "Un seul mot"],
+    ["more-professional", "formalizer.tone.more-professional"],
+    ["more-technical", "formalizer.tone.more-technical"],
+    ["more-accessible", "formalizer.tone.more-accessible"],
+    ["more-polite", "formalizer.tone.more-polite"],
+    ["less-snarky", "formalizer.tone.less-snarky"],
+    ["angrier", "formalizer.tone.angrier"],
+    ["easier-to-read", "formalizer.tone.easier-to-read"],
+    ["more-formal", "formalizer.tone.more-formal"],
+    ["more-informal", "formalizer.tone.more-informal"],
+    ["more-sociable", "formalizer.tone.more-sociable"],
+    ["more-to-the-point", "formalizer.tone.more-to-the-point"],
+    ["less-emotional", "formalizer.tone.less-emotional"],
+    ["more-passionate", "formalizer.tone.more-passionate"],
+    ["more-sarcastic", "formalizer.tone.more-sarcastic"],
+    ["grammatically-correct", "formalizer.tone.grammatically-correct"],
+    ["bullet-points", "formalizer.tone.bullet-points"],
+    ["single-word", "formalizer.tone.single-word"],
   ];
-
-  function esc(s) {
-    return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  }
 
   function label(id) {
     const found = TONES.find((tone) => tone[0] === id);
-    return found ? found[1] : TONES[0][1];
+    return found ? t(found[1]) : t("formalizer.tone.more-professional");
+  }
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
   function loadFavs() {
@@ -49,45 +51,45 @@
     function paint(values, result) {
       values = values || {};
       container.innerHTML = `
-        <p><a class="back" href="#/">← Tous les outils</a></p>
+        <p><a class="back" href="#/">${t("app.back")}</a></p>
         <div class="formalizer__head">
-          <h1>Formalizer</h1>
+          <h1>${t("tools.formalizer.name")}</h1>
           <div class="tool-help">
-            <button class="tool-help__toggle" type="button" aria-expanded="false">Aide ?</button>
-            <p class="tool-help__text" hidden>Colle un brouillon, choisis un ton, puis convertis. Le piquant règle la force du changement. L'étoile garde un ton dans les favoris de ce navigateur.</p>
+            <button class="tool-help__toggle" type="button" aria-expanded="false">${t("help.toggle")}</button>
+            <p class="tool-help__text" hidden>${t("formalizer.help")}</p>
           </div>
         </div>
-        <p class="formalizer__lead">Reformule tes idées dans un autre ton, ou l'inverse</p>
+        <p class="formalizer__lead">${t("formalizer.lead")}</p>
         <form class="formalizer" id="formalizer-form">
-          <textarea name="text" placeholder="Écris ton texte ici…" aria-label="Écris ton texte ici…">${esc(values.text || "")}</textarea>
+          <textarea name="text" placeholder="${t("formalizer.field.text.placeholder")}" aria-label="${t("formalizer.field.text")}">${esc(values.text || "")}</textarea>
           <div class="formalizer__row">
-            <span>Rendre mon texte :</span>
+            <span>${t("formalizer.toneLabel")}</span>
             <button class="formalizer__toggle" type="button" id="tone-toggle" aria-haspopup="true" aria-expanded="${menuOpen}">${esc(label(tone))}</button>
-            <button class="btn" type="submit">Convertir</button>
+            <button class="btn" type="submit">${t("formalizer.submit")}</button>
             <div id="formalizer-spice"></div>
           </div>
           <div class="formalizer__menu" id="tone-menu" ${menuOpen ? "" : "hidden"}>
-            <p>Tons</p>
+            <p>${t("formalizer.menu.tons")}</p>
             ${TONES.map(([id, name]) => `
               <div class="formalizer__choice">
-                <button class="formalizer__pick" type="button" data-tone="${id}" aria-checked="${id === tone}">${esc(name)}</button>
-                <button class="formalizer__star" type="button" data-fav="${id}" aria-label="${favs.includes(id) ? "Retirer des favoris" : "Ajouter aux favoris"}" aria-pressed="${favs.includes(id)}">★</button>
+                <button class="formalizer__pick" type="button" data-tone="${id}" aria-checked="${id === tone}">${esc(t(name))}</button>
+                <button class="formalizer__star" type="button" data-fav="${id}" aria-label="${favs.includes(id) ? t("formalizer.fav.remove") : t("formalizer.fav.add")}" aria-pressed="${favs.includes(id)}">★</button>
               </div>`).join("")}
           </div>
-          <p class="formalizer__fav-label">Favoris</p>
+          <p class="formalizer__fav-label">${t("formalizer.menu.favs")}</p>
           <div class="formalizer__favs">
             ${favs.map((id) => `<button class="formalizer__fav${id === tone ? " formalizer__fav--on" : ""}" type="button" data-tone="${id}" aria-pressed="${id === tone}">${esc(label(id))}</button>`).join("")}
           </div>
         </form>
         <div class="formalizer__out">
-          <div class="prose" id="formalizer-output">${esc(result ? result.text : "Le texte converti apparaîtra ici…")}</div>
-          <button class="copy-text" type="button" data-copy-target="#formalizer-output" aria-label="Copier">Copier</button>
+          <div class="prose" id="formalizer-output">${esc(result ? result.text : t("formalizer.output.empty"))}</div>
+          <button class="copy-text" type="button" data-copy-target="#formalizer-output" aria-label="${t("common.copy")}">${t("common.copy")}</button>
         </div>
         <div id="formalizer-history"></div>`;
       Spice.mount(container.querySelector("#formalizer-spice"), {
         name: "spice",
         value: values.spice || 3,
-        hint: "Niveau de piquant : à quel point transformer le texte.",
+        hint: t("formalizer.spice.hint"),
       });
       ToolHelp.bind(container);
       CopyText.bind(container, toast);
@@ -125,9 +127,9 @@
       form.onsubmit = async (event) => {
         event.preventDefault();
         const text = form.elements.text.value.trim();
-        if (!text) { toast("Commence par écrire un texte"); return; }
+        if (!text) { toast(t("formalizer.error.empty")); return; }
         const spice = Number(form.elements.spice.value);
-        container.querySelector("#formalizer-output").textContent = "Le gobelin réécrit…";
+        container.querySelector("#formalizer-output").textContent = t("formalizer.output.writing");
         try {
           const result = await apiCall("/api/formalizer", { text, tone, spice });
           addHistory("Formalizer", text, result);

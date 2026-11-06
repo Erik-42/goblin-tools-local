@@ -38,6 +38,8 @@
     return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  const t = (key, params) => I18n.t(key, params);
+
   function uid() {
     return Date.now() + Math.floor(Math.random() * 1000);
   }
@@ -69,7 +71,7 @@
 
   function blank() {
     const id = uid();
-    return { spice: 3, activeId: id, tabs: [{ id, name: "À faire", items: [] }] };
+    return { spice: 3, activeId: id, tabs: [{ id, name: t("magicTodo.tab.default"), items: [] }] };
   }
 
   function load() {
@@ -103,7 +105,9 @@
 
   function progress(steps) {
     const n = steps.filter((s) => s.done).length;
-    return `${n} ${n === 1 ? "faite" : "faites"} sur ${steps.length}`;
+    const total = steps.length;
+    const key = n === 1 ? "magicTodo.result.progress" : "magicTodo.result.progressMany";
+    return `${t(key, { n })} ${t("magicTodo.result.total", { total })}`;
   }
 
   function plain(entry) {
@@ -112,7 +116,7 @@
 
   function renderResult(entry) {
     return `<div class="magic-todo__result">
-      <h2 class="magic-todo__title">Découpage</h2>
+      <h2 class="magic-todo__title">${t("magicTodo.result.title")}</h2>
       <p class="magic-todo__progress">${progress(entry.steps)}</p>
       <ul class="magic-todo__steps">
         ${entry.steps.map((s, i) => `
@@ -125,8 +129,8 @@
           </li>`).join("")}
       </ul>
       <div class="magic-todo__actions">
-        <button class="btn secondary small" type="button" id="btn-save-list">Ajouter à la liste</button>
-        <button class="btn small" type="button" id="btn-focus">⏯️ Focus avec Taskmaster</button>
+        <button class="btn secondary small" type="button" id="btn-save-list">${t("magicTodo.result.save")}</button>
+        <button class="btn small" type="button" id="btn-focus">${t("magicTodo.result.focus")}</button>
       </div>
     </div>`;
   }
@@ -149,7 +153,7 @@
       saveBtn.onclick = () => {
         addItems([entry.task, ...plain(entry).flatMap((step) => [step.text, ...step.substeps])].filter(Boolean));
         if (actions.onSave) actions.onSave(entry.task, plain(entry));
-        else toast("Ajouté à la liste");
+        else toast(t("magicTodo.result.save"));
       };
     }
     if (focusBtn) {
@@ -231,28 +235,28 @@
     return `
       <li class="magic-todo__item${row.done ? " magic-todo__item--done" : ""}${busyId === row.id ? " magic-todo__item--busy" : ""}${depth ? " magic-todo__item--nested" : ""}" ${depth ? "" : 'draggable="true"'} data-id="${row.id}" style="--depth:${depth}">
         ${hasKids
-          ? `<button class="magic-todo__twist" type="button" data-twist="${row.id}" aria-expanded="${open}" aria-label="${open ? "Refermer" : "Déployer"}">${open ? "▾" : "▸"}</button>`
+          ? `<button class="magic-todo__twist" type="button" data-twist="${row.id}" aria-expanded="${open}" aria-label="${open ? t("magicTodo.twist.close") : t("magicTodo.twist.open")}">${open ? "▾" : "▸"}</button>`
           : `<span class="magic-todo__twist magic-todo__twist--empty" aria-hidden="true"></span>`}
         ${depth ? "" : `<span class="magic-todo__handle" aria-hidden="true">⋮⋮</span>`}
-        <input class="magic-todo__box" type="checkbox" data-check="${row.id}" ${row.done ? "checked" : ""} aria-label="Fait">
+        <input class="magic-todo__box" type="checkbox" data-check="${row.id}" ${row.done ? "checked" : ""} aria-label="${t("magicTodo.checkbox.done")}">
         ${keepId === row.id
           ? `<input class="magic-todo__edit" data-edit="${row.id}" value="${esc(keepText || row.text)}">`
           : `<span class="magic-todo__text">${esc(row.text)}</span>`}
         ${row.minutes ? `<span class="magic-todo__time">≈ ${esc(fmtMinutes(row.minutes))}</span>` : ""}
         ${row.deadline ? `<span class="magic-todo__deadline">${esc(row.deadline)}</span>` : ""}
-        <button class="magic-todo__icon" type="button" data-break="${row.id}" aria-label="Découper cet élément">⤵</button>
+        <button class="magic-todo__icon" type="button" data-break="${row.id}" aria-label="${t("magicTodo.breakdown")}">⤵</button>
         <div class="magic-todo__menu-wrap">
-          <button class="magic-todo__icon" type="button" data-options="${row.id}" aria-label="Options de la tâche" aria-expanded="${openMenu === row.id}">⋯</button>
+          <button class="magic-todo__icon" type="button" data-options="${row.id}" aria-label="${t("magicTodo.options")}" aria-expanded="${openMenu === row.id}">⋯</button>
           <div class="magic-todo__menu" ${openMenu === row.id ? "" : "hidden"}>
-            <button type="button" data-act="estimate" data-id="${row.id}">Estimer</button>
-            <button type="button" data-act="deadline" data-id="${row.id}">Ajouter une échéance</button>
-            <button type="button" data-act="edit" data-id="${row.id}">Modifier</button>
-            <button type="button" data-act="subtask" data-id="${row.id}">Ajouter une sous-tâche</button>
-            <button type="button" data-act="remove" data-id="${row.id}">Retirer</button>
+            <button type="button" data-act="estimate" data-id="${row.id}">${t("magicTodo.estimate")}</button>
+            <button type="button" data-act="deadline" data-id="${row.id}">${t("magicTodo.deadline")}</button>
+            <button type="button" data-act="edit" data-id="${row.id}">${t("magicTodo.edit")}</button>
+            <button type="button" data-act="subtask" data-id="${row.id}">${t("magicTodo.subtask")}</button>
+            <button type="button" data-act="remove" data-id="${row.id}">${t("magicTodo.remove")}</button>
           </div>
         </div>
         ${openMenu === "deadline-" + row.id ? `<input class="magic-todo__date" type="date" data-date="${row.id}" value="${esc(row.deadline)}">` : ""}
-        ${openMenu === "sub-" + row.id ? `<form class="magic-todo__subform" data-subform="${row.id}"><input type="text" placeholder="Sous-tâche" required><button class="btn small" type="submit">Ajouter</button></form>` : ""}
+        ${openMenu === "sub-" + row.id ? `<form class="magic-todo__subform" data-subform="${row.id}"><input type="text" placeholder="${t("magicTodo.subTask.placeholder")}" required><button class="btn small" type="submit">${t("magicTodo.subTask.add")}</button></form>` : ""}
         ${hasKids && open ? `<ul class="magic-todo__subs">${row.subtasks.map((sub) => renderNode(sub, keepId, keepText, depth + 1)).join("")}</ul>` : ""}
       </li>`;
   }
@@ -267,6 +271,79 @@
 
   function persist() {
     save(state);
+  }
+
+  function parseCsvLine(line) {
+    const cols = [];
+    let cur = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (line[i + 1] === '"') { cur += '"'; i++; }
+          else inQuotes = false;
+        } else cur += c;
+      } else {
+        if (c === ",") { cols.push(cur); cur = ""; }
+        else if (c === '"') inQuotes = true;
+        else cur += c;
+      }
+    }
+    cols.push(cur);
+    return cols;
+  }
+
+  function exportCsv(tab) {
+    const rows = [["text", "done", "deadline", "minutes", "subtasks"]];
+    for (const row of tab.items) {
+      rows.push([
+        row.text,
+        row.done ? "1" : "0",
+        row.deadline || "",
+        row.minutes || "",
+        (row.subtasks || []).map((s) => s.text).join(" · "),
+      ]);
+    }
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${esc(tab.name)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast(t("app.toast.exported"));
+  }
+
+  function importCsv(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const lines = reader.result.split(/\r?\n/).filter(Boolean);
+          if (lines.length < 2) throw new Error(t("magicTodo.import.empty"));
+          const items = [];
+          for (let i = 1; i < lines.length; i++) {
+            const cols = parseCsvLine(lines[i]);
+            if (!cols[0]) continue;
+            items.push({
+              text: cols[0],
+              done: cols[1] === "1",
+              deadline: cols[3] || "",
+              minutes: cols[4] ? Number(cols[4]) : null,
+              subtasks: (cols[5] || "").split(" · ").filter(Boolean),
+            });
+          }
+          if (!items.length) throw new Error(t("magicTodo.import.none"));
+          resolve(items);
+        } catch (err) { reject(err); }
+      };
+      reader.onerror = () => reject(new Error(t("magicTodo.import.failed")));
+      reader.readAsText(file);
+    });
   }
 
   function commit(change) {
@@ -298,45 +375,49 @@
       <div class="magic-todo">
         <div class="magic-todo__head">
           <div>
-            <h1 class="magic-todo__name">Magic ToDo</h1>
-            <p class="magic-todo__lead">On découpe pour que tu n'aies pas à le faire</p>
+            <h1 class="magic-todo__name">${t("magicTodo.name")}</h1>
+            <p class="magic-todo__lead">${t("magicTodo.lead")}</p>
           </div>
           <div class="tool-help">
-            <button class="tool-help__toggle" type="button" aria-expanded="false">Aide ?</button>
-            <p class="tool-help__text" hidden>Ajoute une tâche, coche-la, ou découpe-la. Chaque sous-tâche se découpe de la même façon. Le triangle déploie ou referme. Le piquant règle le niveau de détail.</p>
+            <button class="tool-help__toggle" type="button" aria-expanded="false">${t("help.toggle")}</button>
+            <p class="tool-help__text" hidden>${t("magicTodo.help")}</p>
           </div>
         </div>
         <form class="magic-todo__add" id="todo-add">
-          <input class="magic-todo__input" name="text" type="text" placeholder="Ajouter un élément…" aria-label="Ajouter un élément…" value="${esc(keepId ? "" : keepText)}">
-          <button class="magic-todo__plus" type="submit" aria-label="Ajouter un élément">+</button>
+          <input class="magic-todo__input" name="text" type="text" placeholder="${t("magicTodo.add.placeholder")}" aria-label="${t("magicTodo.add.placeholder")}" value="${esc(keepId ? "" : keepText)}">
+          <button class="magic-todo__plus" type="submit" aria-label="${t("magicTodo.add.placeholder")}">+</button>
           <div id="todo-spice"></div>
         </form>
         <div class="magic-todo__tabs" role="tablist">
           ${state.tabs.map((entry) => `
             <button class="magic-todo__tab${entry.id === tab.id ? " magic-todo__tab--active" : ""}" type="button" data-tab="${entry.id}" role="tab" aria-selected="${entry.id === tab.id}">${esc(entry.name)}</button>
           `).join("")}
-          <button class="magic-todo__tab" type="button" id="todo-new-tab" aria-label="Nouvel onglet">+</button>
+          <button class="magic-todo__tab" type="button" id="todo-new-tab" aria-label="${t("magicTodo.newTab")}">+</button>
         </div>
         <div class="magic-todo__toolbar">
-          <button class="btn secondary small" type="button" id="todo-templates">Modèles</button>
-          <button class="btn secondary small" type="button" id="todo-share">Partager cette liste</button>
+          <button class="btn secondary small" type="button" id="todo-templates">${t("magicTodo.templates")}</button>
+          <button class="btn secondary small" type="button" id="todo-share">${t("magicTodo.share")}</button>
+          <button class="btn secondary small" type="button" id="todo-export">${t("magicTodo.export")}</button>
+          <button class="btn secondary small" type="button" id="todo-import">${t("magicTodo.import")}</button>
+          <input type="file" id="todo-import-file" accept=".csv" hidden />
+          <button class="btn secondary small" type="button" id="todo-print">${t("magicTodo.print")}</button>
           <div class="magic-todo__menu-wrap">
-            <button class="btn secondary small" type="button" id="todo-tools" aria-expanded="${openMenu === "tools"}">Outils</button>
+            <button class="btn secondary small" type="button" id="todo-tools" aria-expanded="${openMenu === "tools"}">${t("magicTodo.tools")}</button>
             <div class="magic-todo__menu" ${openMenu === "tools" ? "" : "hidden"}>
-              <button type="button" data-tool="rename">Renommer l'onglet</button>
-              <button type="button" data-tool="delete" ${state.tabs.length < 2 ? "disabled" : ""}>Supprimer l'onglet</button>
+              <button type="button" data-tool="rename">${t("magicTodo.rename")}</button>
+              <button type="button" data-tool="delete" ${state.tabs.length < 2 ? "disabled" : ""}>${t("magicTodo.delete")}</button>
             </div>
           </div>
-          <button class="btn secondary small" type="button" id="todo-undo" ${undo.length ? "" : "disabled"} aria-label="Annuler">↩</button>
-          <button class="btn secondary small" type="button" id="todo-redo" ${redo.length ? "" : "disabled"} aria-label="Rétablir">↪</button>
+          <button class="btn secondary small" type="button" id="todo-undo" ${undo.length ? "" : "disabled"} aria-label="${t("magicTodo.undo")}">↩</button>
+          <button class="btn secondary small" type="button" id="todo-redo" ${redo.length ? "" : "disabled"} aria-label="${t("magicTodo.redo")}">↪</button>
         </div>
         <ul class="magic-todo__items">
           ${tab.items.map((row) => renderNode(row, keepId, keepText, 0)).join("")}
         </ul>
         <dialog class="magic-todo__dialog" id="todo-dialog">
-          <form method="dialog"><button class="magic-todo__close" value="cancel" aria-label="Fermer">×</button></form>
-          <h2>Modèles</h2>
-          <p class="magic-todo__lead">Des tâches courantes, déjà découpées. Choisis-en une pour voir les étapes.</p>
+          <form method="dialog"><button class="magic-todo__close" value="cancel" aria-label="${t("common.close")}">×</button></form>
+          <h2>${t("magicTodo.dialog.title")}</h2>
+          <p class="magic-todo__lead">${t("magicTodo.dialog.desc")}</p>
           ${groups().map((group) => `
             <h3 class="magic-todo__group">${esc(group)}</h3>
             <div class="magic-todo__template-list">
@@ -353,7 +434,7 @@
     Spice.mount(root.querySelector("#todo-spice"), {
       name: "spice",
       value: state.spice,
-      hint: "Niveau de piquant : jusqu'où découper ? Tu peux le changer à tout moment, il s'applique à tous les éléments.",
+      hint: t("magicTodo.spice.hint"),
       onChange(level) {
         state.spice = level;
         persist();
@@ -398,7 +479,7 @@
     root.querySelectorAll("[data-tool]").forEach((button) => {
       button.onclick = () => {
         if (button.dataset.tool === "rename") {
-          const name = window.prompt("Nom de l'onglet", tab.name);
+          const name = window.prompt(t("magicTodo.renamePrompt"), tab.name);
           if (!name || !name.trim()) return;
           commit(() => { activeTab(state).name = name.trim(); openMenu = null; });
         } else if (button.dataset.tool === "delete" && state.tabs.length > 1) {
@@ -428,10 +509,41 @@
       const text = `${tab.name}\n${listText(tab)}`;
       try {
         await navigator.clipboard.writeText(text);
-        toast("Liste copiée");
+        toast(t("app.toast.copied"));
       } catch {
-        toast("La copie a échoué");
+        toast(t("app.toast.copyFailed"));
       }
+    };
+    root.querySelector("#todo-export").onclick = () => {
+      exportCsv(tab);
+    };
+    root.querySelector("#todo-import").onclick = () => {
+      root.querySelector("#todo-import-file").click();
+    };
+    root.querySelector("#todo-import-file").onchange = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const items = await importCsv(file);
+        commit(() => {
+          for (const it of items) {
+            const row = item(it.text);
+            row.done = it.done;
+            row.deadline = it.deadline || "";
+            row.minutes = it.minutes;
+            row.subtasks = (it.subtasks || []).map((s) => item(s));
+            activeTab(state).items.push(row);
+          }
+        });
+        toast(t("app.toast.imported"));
+      } catch (err) {
+        toast(err.message);
+      }
+      event.target.value = "";
+    };
+    root.querySelector("#todo-print").onclick = () => {
+      window.print();
+      toast(t("app.toast.printed"));
     };
     root.querySelector("#todo-templates").onclick = () => {
       root.querySelector("#todo-dialog").showModal();
@@ -441,7 +553,7 @@
         preview = TEMPLATES[Number(button.dataset.preview)];
         const box = root.querySelector("#todo-preview");
         box.innerHTML = `<h3>${esc(preview.name)}</h3><ol>${preview.steps.map((step) => `<li>${esc(step)}</li>`).join("")}</ol>
-          <button class="btn small" type="button" id="todo-use-template">Ajouter à la liste</button>`;
+          <button class="btn small" type="button" id="todo-use-template">${t("magicTodo.preview.add")}</button>`;
         box.querySelector("#todo-use-template").onclick = () => {
           root.querySelector("#todo-dialog").close();
           commit(() => {
@@ -596,7 +708,7 @@
     paint();
     try {
       const row = findItem(load(), id);
-      if (!row) throw new Error("Élément introuvable");
+      if (!row) throw new Error(t("magicTodo.notFound"));
       const result = await apiCall("/api/magic-todo", { task: row.text, spice: state.spice });
       const steps = normalize(result.steps);
       commit(() => {
@@ -628,7 +740,7 @@
     rows.forEach((text) => activeTab(state).items.push(item(text)));
     persist();
     if (root) paint();
-    toast("Ajouté à Magic ToDo");
+    toast(t("magicTodo.added"));
   }
 
   function currentList() {

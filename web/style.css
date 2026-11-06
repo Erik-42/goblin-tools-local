@@ -217,3 +217,17 @@ textarea { min-height: 120px; resize: vertical; }
   .grid { grid-template-columns: 1fr; }
   .focus-card .step-text { font-size: 1.25rem; }
 }
+
+@media print {
+  .topbar, .toast, .magic-todo__toolbar, .magic-todo__add, .tool-help, .magic-todo__dialog, .magic-todo__menu, button, .btn, .magic-todo__plus, .magic-todo__handle, .magic-todo__icon, .magic-todo__twist { display: none !important; }
+  .magic-todo__items { margin: 0; }
+  .magic-todo__item { border: 1px solid #000; background: #fff !important; color: #000 !important; break-inside: avoid; page-break-inside: avoid; }
+  .magic-todo__item--done .magic-todo__text { text-decoration: line-through; color: #555; }
+  .magic-todo__text { color: #000 !important; }
+  .magic-todo__time, .magic-todo__deadline { color: #333; }
+  .magic-todo__sub { color: #333; }
+  body { background: #fff !important; color: #000 !important; }
+  .container { max-width: 100%; padding: 0; }
+  .magic-todo__name { color: #000 !important; }
+  .magic-todo__lead { color: #333 !important; }
+}
