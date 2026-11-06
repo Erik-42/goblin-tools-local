@@ -5,6 +5,7 @@ __pycache__/
 # Configuration API locale (contient la clé, ne jamais la versionner)
 goblin-settings.json
 server/settings.json
+.env
 
 # Artefacts PyInstaller
 build/

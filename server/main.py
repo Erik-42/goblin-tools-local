@@ -1,5 +1,6 @@
 """FastAPI entry point: serves the web SPA and the /api tool endpoints."""
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -7,6 +8,35 @@ from . import llm, local_ai, settings_store, tools
 from .paths import WEB_DIR
 
 app = FastAPI(title="Goblin Tools Local")
+
+# ----------------------------------------------------------------- CORS
+_settings = settings_store.load()
+_origins = [o.strip() for o in str(_settings.get("cors_origins") or "").split(",") if o.strip()]
+if not _origins:
+    _origins = ["*"] if _settings.get("mode") != "server" else []
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ----------------------------------------------------------------- auth
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    settings = settings_store.load()
+    token = settings.get("auth_token")
+    path = request.url.path
+    if token and path.startswith("/api/") and path != "/api/health":
+        if path == "/api/settings" and request.method == "GET":
+            pass  # masque la clé, pas de secret exposé
+        else:
+            auth = request.headers.get("authorization", "")
+            if auth != f"Bearer {token}":
+                return JSONResponse(status_code=401, content={"detail": "Non autorisé"})
+    response = await call_next(request)
+    return response
 
 
 @app.exception_handler(llm.LLMNotConfigured)
@@ -35,6 +65,13 @@ async def get_settings():
         "primary": resolved.get("primary") or resolved["model"],
         "fallback": resolved.get("fallback") or "",
         "loaded": resolved.get("loaded") or "",
+        "mode": s.get("mode"),
+        "host": s.get("host"),
+        "port": s.get("port"),
+        "data_dir": s.get("data_dir"),
+        "auth_token_set": bool(s.get("auth_token")),
+        "cors_origins": s.get("cors_origins") or "",
+        "ai_mode": s.get("ai_mode"),
     }
 
 
@@ -49,6 +86,12 @@ async def put_settings(data: dict):
 async def test_settings():
     reply = await llm.chat("Tu es un assistant de test.", "Réponds par un seul mot : oui", temperature=0)
     return {"ok": True, "reply": reply.strip()[:50]}
+
+
+@app.get("/api/health")
+async def health():
+    status = await llm.health(settings_store.load())
+    return status
 
 
 # --------------------------------------------------------------------- tools

@@ -434,7 +434,7 @@ async function renderSettings() {
   $app.innerHTML = `
     <p><a class="back" href="#/">← Tous les outils</a></p>
     <div class="tool-head"><span class="icon">⚙️</span><h1>Réglages</h1></div>
-    <p class="tool-desc">En mode Ollama, le modèle suit <code>ia-choix</code>. Sinon, configure une API compatible OpenAI.</p>
+    <p class="tool-desc">Configuration du déploiement et du fournisseur IA.</p>
     <div class="panel"><div id="set-loading" class="loading"><span class="spinner"></span>Lecture de la configuration…</div></div>`;
 
   let cur;
@@ -449,6 +449,27 @@ async function renderSettings() {
 
   document.querySelector(".panel").innerHTML = `
     ${localNote}
+    <div style="display:flex;align-items:center;gap:10px;margin:10px 0">
+      <span class="tool-desc">Statut IA&nbsp;:</span>
+      <span id="set-health" class="ai-status"></span>
+      <span id="set-health-text" class="tool-desc">―</span>
+    </div>
+    <div class="field"><label>Mode déploiement</label>
+      <select id="set-mode">
+        <option value="local">Local (127.0.0.1 seulement)</option>
+        <option value="server">Serveur (toutes interfaces)</option>
+      </select></div>
+    <div class="field"><label>Mode IA</label>
+      <select id="set-ai-mode">
+        <option value="auto">Auto (distant si réseau, sinon local)</option>
+        <option value="distant">Distant (API configurée)</option>
+        <option value="local">Local (Ollama)</option>
+      </select></div>
+    <div class="field"><label>Host</label><input type="text" id="set-host" value="${esc(cur.host)}" /></div>
+    <div class="field"><label>Port</label><input type="text" id="set-port" value="${esc(cur.port)}" /></div>
+    <div class="field"><label>Répertoire de données</label><input type="text" id="set-data-dir" placeholder="par défaut : à côté de l'exe" value="${esc(cur.data_dir || "")}" /></div>
+    <div class="field"><label>Jeton d'authentification (Bearer)</label><input type="password" id="set-auth-token" placeholder="laisser vide pour conserver" autocomplete="off" /></div>
+    <div class="field"><label>Origines CORS (virgulées)</label><input type="text" id="set-cors" placeholder="vide = strict" value="${esc(cur.cors_origins)}" /></div>
     <div class="field"><label><span class="status-dot ${cur.has_key ? "ok" : "no"}"></span>Clé API ${cur.has_key ? `(actuelle : ${esc(cur.api_key_masked)})` : "(non définie)"}</label>
       <input type="password" id="set-key" placeholder="sk-…  laisser vide pour conserver la clé" autocomplete="off" /></div>
     <div class="field"><label>URL de base</label><input type="text" id="set-url" value="${esc(cur.base_url)}" /></div>
@@ -457,15 +478,50 @@ async function renderSettings() {
       <button class="btn" id="set-save">Enregistrer</button>
       <button class="btn secondary" id="set-test">🔌 Tester la connexion</button>
     </div>
-    <p class="tool-desc" style="margin-top:14px">Astuce : Ollama local utilise <code>http://127.0.0.1:11434/v1</code>. Le modèle suit le choix de <code>ia-choix</code>.</p>
+    <p class="tool-desc" style="margin-top:14px">Astuce : Ollama local utilise <code>http://127.0.0.1:11434/v1</code>. En mode serveur, définissez GOBLIN_AUTH_TOKEN pour protéger les appels API.</p>
     <div id="set-out"></div>`;
 
+  document.getElementById("set-mode").value = cur.mode || "local";
+  document.getElementById("set-ai-mode").value = cur.ai_mode || "auto";
+
+  async function refreshHealth() {
+    try {
+      const r = await fetch("/api/health");
+      if (r.ok) {
+        const s = await r.json();
+        const dot = document.getElementById("set-health");
+        const txt = document.getElementById("set-health-text");
+        dot.className = "ai-status";
+        let kind = "offline";
+        if (s.status === "en ligne") kind = "online";
+        else if (s.status === "local") kind = "local";
+        dot.classList.add(`ai-status--${kind}`);
+        txt.textContent = s.status;
+      } else {
+        document.getElementById("set-health-text").textContent = "erreur";
+      }
+    } catch { document.getElementById("set-health-text").textContent = "indisponible"; }
+  }
+  refreshHealth();
+
   const save = async () => {
-    const body = { base_url: document.getElementById("set-url").value, model: document.getElementById("set-model").value };
+    const body = {
+      mode: document.getElementById("set-mode").value,
+      ai_mode: document.getElementById("set-ai-mode").value,
+      host: document.getElementById("set-host").value,
+      port: document.getElementById("set-port").value,
+      data_dir: document.getElementById("set-data-dir").value,
+      cors_origins: document.getElementById("set-cors").value,
+      base_url: document.getElementById("set-url").value,
+      model: document.getElementById("set-model").value,
+    };
     const key = document.getElementById("set-key").value.trim();
     if (key) body.api_key = key;
+    const tok = document.getElementById("set-auth-token").value.trim();
+    if (tok) body.auth_token = tok;
     await apiCall("/api/settings", body, "PUT");
     document.getElementById("set-key").value = "";
+    document.getElementById("set-auth-token").value = "";
     toast("Enregistré ✅");
   };
   document.getElementById("set-save").onclick = async () => {
@@ -506,6 +562,27 @@ function route() {
   renderHome();
 }
 
+// ----------------------------------------------------------------- santé IA
+async function fetchHealth() {
+  try {
+    const r = await fetch("/api/health");
+    if (!r.ok) return;
+    const s = await r.json();
+    const dot = document.getElementById("ai-status");
+    if (!dot) return;
+    dot.className = "ai-status";
+    let kind = "offline";
+    if (s.status === "en ligne") kind = "online";
+    else if (s.status === "local") kind = "local";
+    dot.classList.add(`ai-status--${kind}`);
+  } catch { /* ignore */ }
+}
+function startHealthPoll() {
+  fetchHealth();
+  setInterval(fetchHealth, 30000);
+}
+
+startHealthPoll();
 initThemeToggle();
 window.addEventListener("hashchange", route);
 route();

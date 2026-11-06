@@ -21,6 +21,17 @@ def _read(name: str, default: str = "") -> str:
     return text or default
 
 
+def ai_mode(settings: dict) -> str:
+    """Mode de résolution du fournisseur IA : distant | local | auto."""
+    return str(settings.get("ai_mode") or "auto").strip().lower()
+
+
+def is_local_endpoint(base: str) -> bool:
+    """True si l'endpoint pointe vers Ollama en local."""
+    base = str(base or "").rstrip("/")
+    return "127.0.0.1:11434" in base or "localhost:11434" in base
+
+
 def loaded_model() -> str:
     try:
         with urlopen(f"{OLLAMA_BASE}/api/ps", timeout=2) as resp:
@@ -42,7 +53,13 @@ def resolve(settings: dict) -> dict:
     """
     mode = _read("mode", "subscription")
     base = str(settings.get("base_url") or "").rstrip("/")
-    local = mode == "ollama" or "127.0.0.1:11434" in base or "localhost:11434" in base
+    amode = ai_mode(settings)
+    if amode == "local":
+        local = True
+    elif amode == "distant":
+        local = False
+    else:  # auto : détection par l'URL / le choix ia-choix
+        local = mode == "ollama" or is_local_endpoint(base)
     if not local:
         return {
             "base_url": settings.get("base_url") or OLLAMA_V1,
@@ -51,6 +68,7 @@ def resolve(settings: dict) -> dict:
             "fallback": "",
             "alternates": [],
             "source": "settings",
+            "ai_mode": ai_mode(settings),
         }
 
     primary = _read("ollama-model", DEFAULT_MODEL)
@@ -73,4 +91,5 @@ def resolve(settings: dict) -> dict:
         "source": "ia-choix" if mode == "ollama" else "ollama",
         "loaded": loaded,
         "primary": primary,
+        "ai_mode": ai_mode(settings),
     }

@@ -2,6 +2,7 @@
 import asyncio
 import json
 import re
+import time
 
 import httpx
 
@@ -135,9 +136,86 @@ async def _post(endpoint: dict, system: str, user: str, temperature: float, want
     return await _post_openai(endpoint, system, user, temperature, want_json)
 
 
+# ----------------------------------------------------------------- health
+_health_cache = {"status": None, "ts": 0.0}
+HEALTH_TTL = 30.0  # secondes
+
+
+async def probe(base_url: str, timeout: float = 3.0) -> bool:
+    """Vérifie qu'un endpoint IA est joignable (requête légère, sans clé)."""
+    base = str(base_url or "").rstrip("/")
+    if not base:
+        return False
+    candidates = []
+    if local_ai.is_local_endpoint(base):
+        candidates.append(base.replace("/v1", "") + "/api/ps")
+    candidates.append(base + "/models")
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            for url in candidates:
+                try:
+                    resp = await client.get(url)
+                    if resp.status_code < 500:
+                        return True
+                except httpx.HTTPError:
+                    continue
+    except Exception:
+        return False
+    return False
+
+
+async def health(settings: dict) -> dict:
+    """État du fournisseur IA pour l'indicateur UI (en ligne / local / offline)."""
+    now = time.time()
+    if _health_cache["status"] is not None and now - _health_cache["ts"] < HEALTH_TTL:
+        return _health_cache["status"]
+
+    amode = local_ai.ai_mode(settings)
+    endpoint = local_ai.resolve(settings)
+    base = endpoint.get("base_url", "")
+
+    if amode == "local" or local_ai.is_local_endpoint(base):
+        ok = await probe(base)
+        status = "local" if ok else "offline"
+        provider = "local"
+    elif amode == "distant":
+        ok = await probe(base)
+        status = "en ligne" if ok else "hors-ligne"
+        provider = "distant"
+    else:  # auto
+        distant_ok = (
+            await probe(base) if not local_ai.is_local_endpoint(base) else False
+        )
+        if distant_ok:
+            status = "en ligne"
+            provider = "distant"
+        else:
+            local_ok = await probe(local_ai.OLLAMA_V1)
+            if local_ok:
+                status = "local"
+                provider = "local"
+            else:
+                status = "hors-ligne"
+                provider = "offline"
+
+    result = {"status": status, "provider": provider, "mode": amode}
+    _health_cache["status"] = result
+    _health_cache["ts"] = now
+    return result
+
+
 async def chat(system: str, user: str, temperature: float = 0.7, want_json: bool = False) -> str:
     settings = settings_store.load()
+    amode = local_ai.ai_mode(settings)
     endpoint = local_ai.resolve(settings)
+
+    # Auto mode : bascule silencieuse vers le local si le distant est injoignable.
+    if amode == "auto" and not local_ai.is_local_endpoint(endpoint.get("base_url", "")):
+        reachable = await probe(endpoint.get("base_url", ""))
+        if not reachable:
+            settings = {**settings, "ai_mode": "local"}
+            endpoint = local_ai.resolve(settings)
+
     if not (endpoint.get("api_key") or settings.get("api_key")) and not _is_ollama(
         str(endpoint.get("base_url") or "")
     ):

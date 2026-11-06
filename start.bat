@@ -11,6 +11,5 @@ python -c "import fastapi, uvicorn, httpx" >nul 2>nul || (
     python -m pip install -r requirements.txt
 )
 
-start "" http://127.0.0.1:8765
 echo Goblin Tools — édition locale : http://127.0.0.1:8765  (ferme cette fenêtre pour arrêter)
-python -m uvicorn server.main:app --host 127.0.0.1 --port 8765
+python run.py --host 127.0.0.1 --port 8765
