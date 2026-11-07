@@ -23,6 +23,9 @@
     ["grammatically-correct", "formalizer.tone.grammatically-correct"],
     ["bullet-points", "formalizer.tone.bullet-points"],
     ["single-word", "formalizer.tone.single-word"],
+    ["my-voice", "formalizer.tone.my-voice"],
+    ["pro", "formalizer.tone.pro"],
+    ["custom", "formalizer.tone.custom"],
   ];
 
   function label(id) {
@@ -47,6 +50,8 @@
     let menuOpen = false;
     let favs = loadFavs();
     let activeId = null;
+    let customTone = localStorage.getItem("gt_formalizer_custom_tone") || "";
+    let voiceSample = localStorage.getItem("gt_formalizer_voice_sample") || "";
 
     function paint(values, result) {
       values = values || {};
@@ -80,6 +85,19 @@
           <div class="formalizer__favs">
             ${favs.map((id) => `<button class="formalizer__fav${id === tone ? " formalizer__fav--on" : ""}" type="button" data-tone="${id}" aria-pressed="${id === tone}">${esc(label(id))}</button>`).join("")}
           </div>
+          ${tone === "custom" ? `
+            <div class="formalizer__custom">
+              <label>${t("formalizer.custom.label")}</label>
+              <textarea name="custom-tone" placeholder="${t("formalizer.custom.placeholder")}">${esc(customTone)}</textarea>
+            </div>
+          ` : ""}
+          ${tone === "my-voice" ? `
+            <div class="formalizer__voice">
+              <label>${t("formalizer.voice.label")}</label>
+              <textarea name="voice-sample" placeholder="${t("formalizer.voice.placeholder")}">${esc(voiceSample)}</textarea>
+              <button class="btn" type="button" id="voice-save">${t("formalizer.voice.save")}</button>
+            </div>
+          ` : ""}
         </form>
         <div class="formalizer__out">
           <div class="prose" id="formalizer-output">${esc(result ? result.text : t("formalizer.output.empty"))}</div>
@@ -95,6 +113,8 @@
       CopyText.bind(container, toast);
       ToolHistory.mount(container.querySelector("#formalizer-history"), "formalizer", activeId, (entry) => {
         tone = entry.values.tone || tone;
+        customTone = entry.values.customTone || customTone;
+        voiceSample = entry.values.voiceSample || voiceSample;
         activeId = entry.id;
         menuOpen = false;
         paint(entry.values, entry.result);
@@ -124,19 +144,40 @@
           paint({ ...values, text: form.elements.text.value, spice: form.elements.spice.value });
         };
       });
+      const customInput = form.elements["custom-tone"];
+      if (customInput) {
+        customInput.oninput = () => {
+          customTone = customInput.value;
+          localStorage.setItem("gt_formalizer_custom_tone", customTone);
+        };
+      }
+      const voiceInput = form.elements["voice-sample"];
+      if (voiceInput) {
+        voiceInput.oninput = () => { voiceSample = voiceInput.value; };
+      }
+      const voiceSave = container.querySelector("#voice-save");
+      if (voiceSave) {
+        voiceSave.onclick = () => {
+          localStorage.setItem("gt_formalizer_voice_sample", voiceSample);
+          toast(t("formalizer.voice.saved"));
+        };
+      }
       form.onsubmit = async (event) => {
         event.preventDefault();
         const text = form.elements.text.value.trim();
         if (!text) { toast(t("formalizer.error.empty")); return; }
         const spice = Number(form.elements.spice.value);
+        const body = { text, tone, spice };
+        if (tone === "custom" && customTone) body.customTone = customTone;
+        if (tone === "my-voice" && voiceSample) body.voiceSample = voiceSample;
         container.querySelector("#formalizer-output").textContent = t("formalizer.output.writing");
         try {
-          const result = await apiCall("/api/formalizer", { text, tone, spice });
+          const result = await apiCall("/api/formalizer", body);
           addHistory("Formalizer", text, result);
           const entry = ToolHistory.remember("formalizer", {
             label: text,
             meta: label(tone),
-            values: { text, tone, spice },
+            values: { text, tone, spice, customTone, voiceSample },
             result,
           });
           activeId = entry.id;

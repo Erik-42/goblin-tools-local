@@ -205,6 +205,83 @@ textarea { min-height: 120px; resize: vertical; }
 .progress > i { display: block; height: 100%; background: var(--green); transition: width 0.3s ease; }
 .done-msg { font-size: 1.6rem; font-weight: 800; color: var(--green-dark); }
 
+/* ---- taskmaster focus timer ---- */
+.tm-focus-timer-section { margin: 18px 0 10px; }
+.tm-focus-timer {
+  background: var(--surface);
+  border: 2px solid var(--green);
+  border-radius: 20px;
+  padding: 26px 22px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.tm-focus-remaining {
+  display: block;
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: var(--ink);
+  margin-bottom: 14px;
+  letter-spacing: -1px;
+}
+.tm-focus-track {
+  height: 10px;
+  background: var(--green-light);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 8px 0 16px;
+}
+.tm-focus-fill {
+  display: block;
+  height: 100%;
+  background: var(--green);
+  transition: width 0.3s ease;
+}
+.tm-focus-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.tm-focus-controls .btn { padding: 10px 18px; font-size: 0.95rem; }
+.tm-focus-estimating {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* ---- modal ---- */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal[hidden] { display: none; }
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.modal__panel {
+  position: relative;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--card-radius);
+  padding: 26px 30px;
+  min-width: 300px;
+  max-width: 520px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.modal__panel .btn { margin: 6px 6px 0 0; }
+
 /* ---- settings / history ---- */
 .panel { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--card-radius); padding: 22px; box-shadow: var(--shadow); }
 .hist-item { border-bottom: 1px solid var(--border); padding: 12px 0; }

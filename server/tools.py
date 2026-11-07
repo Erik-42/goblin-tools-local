@@ -98,6 +98,9 @@ TONES = {
     "clear": "clair et simple",
     "friendly": "amical",
     "professional": "professionnel",
+    "my-voice": "ma voix",
+    "pro": "pro",
+    "custom": "personnalisé",
 }
 
 FORMALIZER_SYSTEM = """Tu réécris un texte dans le ton demandé. \
@@ -117,14 +120,21 @@ async def formalizer(data: dict):
     text = _require(data, "text", "Le texte")
     tone_key = str(data.get("tone", "more-professional"))
     tone = TONES.get(tone_key, tone_key)
+    custom_tone = str(data.get("customTone", "")).strip()
+    voice_sample = str(data.get("voiceSample", "")).strip()
     level = _spice(data)
+    tone_description = tone
+    if tone_key == "custom" and custom_tone:
+        tone_description = custom_tone
+    elif tone_key == "my-voice" and voice_sample:
+        tone_description = f"ma voix personnelle (exemple de mon style d'écriture : {voice_sample})"
     reply = await llm.chat(
         FORMALIZER_SYSTEM,
-        f"Ton visé : {tone}\n{SPICE_TONE[level]}\nTexte d'origine :\n{text}",
+        f"Ton visé : {tone_description}\n{SPICE_TONE[level]}\nTexte d'origine :\n{text}",
         want_json=True,
     )
     parsed = llm.parse_json(reply)
-    return {"text": str(parsed.get("text", "")).strip(), "tone": tone}
+    return {"text": str(parsed.get("text", "")).strip(), "tone": tone_description}
 
 
 # --------------------------------------------------------------------- Judge

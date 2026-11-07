@@ -34,6 +34,7 @@
       <a href="#/history" data-i18n-attr="title|app.nav.history" title="Historique">🕘</a>
       <a href="#/assistant" data-i18n-attr="title|app.nav.assistant" title="Second cerveau">🧠</a>
       <a href="#/settings" data-i18n-attr="title|app.nav.settings" title="Réglages">⚙️</a>
+      <a href="#/account" data-i18n-attr="title|app.nav.account" title="Compte">👤</a>
     </nav>
   </header>
 
@@ -42,6 +43,14 @@
   <footer class="foot" data-i18n="app.footer">Quand ça paraît trop grand, trop compliqué · inspiré de goblin.tools</footer>
 
   <div id="toast" class="toast" hidden></div>
+<div id="modal" class="modal" hidden>
+  <div class="modal__backdrop"></div>
+  <div class="modal__panel">
+    <h2 id="modal-title" style="margin:0 0 10px"></h2>
+    <p id="modal-message" style="margin:0 0 18px;color:var(--muted)"></p>
+    <div id="modal-actions" style="display:flex;gap:10px;justify-content:flex-end"></div>
+  </div>
+</div>
 
   <script src="/i18n.js"></script>
 <script src="/spice/spice.js"></script>

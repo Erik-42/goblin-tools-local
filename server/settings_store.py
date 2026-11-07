@@ -72,7 +72,8 @@ def save(settings: dict) -> dict:
         if key in settings and settings[key] is not None:
             value = settings[key]
             if key in ("api_key", "auth_token") and not str(value).strip():
-                continue  # ne pas écraser une clé vide
+                current[key] = ""  # effacement explicite autorisé (ex: vider le jeton)
+                continue
             if key == "port":
                 try:
                     value = int(value)

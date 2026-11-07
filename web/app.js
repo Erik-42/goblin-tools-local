@@ -5,6 +5,7 @@ const $app = document.getElementById("app");
 const LS_HISTORY = "gt_history";
 const LS_LISTS = "gt_lists";           // listes ToDo [{id,name,steps,created}]
 const LS_FOCUS = "gt_focus";           // file Taskmaster {listId, idx, done, skipped}
+const LS_TM_TIMER = "gt_taskmaster_timer"; // timer Taskmaster {remaining,total,running,startedAt}
 const LS_THEME = "gt_theme";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -19,6 +20,41 @@ function toast(msg, ms = 2200) {
 }
 // Rend `toast` utilisable depuis les modules chargés avant app.js.
 window.toast = toast;
+
+function showModal({ title, message, onConfirm, onCancel, confirmLabel, cancelLabel }) {
+  const modal = document.getElementById("modal");
+  if (!modal) return;
+  const titleEl = document.getElementById("modal-title");
+  const messageEl = document.getElementById("modal-message");
+  const actions = document.getElementById("modal-actions");
+  titleEl.textContent = title || "";
+  messageEl.textContent = message || "";
+  actions.innerHTML = "";
+  if (onCancel) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn secondary";
+    btn.textContent = cancelLabel || t("common.cancel");
+    btn.onclick = () => { hideModal(); if (onCancel) onCancel(); };
+    actions.appendChild(btn);
+  }
+  if (onConfirm) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn";
+    btn.textContent = confirmLabel || t("common.ok");
+    btn.onclick = () => { hideModal(); if (onConfirm) onConfirm(); };
+    actions.appendChild(btn);
+  }
+  modal.hidden = false;
+}
+function hideModal() {
+  const modal = document.getElementById("modal");
+  if (modal) modal.hidden = true;
+}
+const backdrop = document.getElementById("modal")?.querySelector(".modal__backdrop");
+if (backdrop) backdrop.addEventListener("click", hideModal);
+window.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
 
 function loadJSON(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
@@ -89,6 +125,18 @@ function fmtMinutes(m) {
   const min = m % 60;
   return min ? `${h} h ${min} min` : `${h} h`;
 }
+
+function fmtTmTimer(seconds) {
+  seconds = Number(seconds) || 0;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return h > 0
+    ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    : `${m}:${String(s).padStart(2, "0")}`;
+}
+
+let tmTimerInterval = null;
 
 /* ============================ outils ============================ */
 const TOOLS = {
@@ -343,9 +391,99 @@ function renderTaskmaster() {
         <p class="tool-help__text" hidden>Une seule tâche de l'onglet Magic ToDo en cours. Coche-la, puis passe à la suivante.</p></div>
     </div>
     <p class="tool-desc">${t("taskmaster.desc")}</p>
+    <div class="tm-focus-timer-section">
+      <div class="tm-focus-timer">
+        <span id="tm-focus-remaining" class="tm-focus-remaining">25:00</span>
+        <div class="tm-focus-track">
+          <div id="tm-focus-fill" class="tm-focus-fill" style="width: 0%;"></div>
+        </div>
+        <div class="tm-focus-controls">
+          <button class="btn" id="tm-focus-play">▶ ${t("taskmaster.timer.play")}</button>
+          <button class="btn secondary" id="tm-focus-pause" disabled>⏸ ${t("taskmaster.timer.pause")}</button>
+          <button class="btn secondary" id="tm-focus-stop" disabled>⏹ ${t("taskmaster.timer.stop")}</button>
+        </div>
+        <div id="tm-focus-estimating" class="tm-focus-estimating" hidden>
+          <span class="spinner"></span> ${t("taskmaster.timer.estimating")}
+        </div>
+      </div>
+    </div>
     <div id="tm-body"></div>`;
   ToolHelp.bind($app);
   const body = document.getElementById("tm-body");
+
+  // ---------------------------- focus timer ----------------------------
+  function tmTimerLoad() {
+    return loadJSON(LS_TM_TIMER, { remaining: 1500, total: 1500, running: false, startedAt: null });
+  }
+  function tmTimerSave(state) { saveJSON(LS_TM_TIMER, state); }
+  function stopTmTimer() {
+    if (tmTimerInterval) { clearInterval(tmTimerInterval); tmTimerInterval = null; }
+  }
+  function tmTimerUpdateUI() {
+    const s = tmTimerLoad();
+    let remaining = s.remaining;
+    if (s.running && s.startedAt) {
+      const elapsed = Math.floor((Date.now() - s.startedAt) / 1000);
+      remaining = Math.max(0, s.remaining - elapsed);
+      if (remaining <= 0) {
+        remaining = 0;
+        s.running = false;
+        s.startedAt = null;
+        tmTimerSave(s);
+        stopTmTimer();
+      }
+    }
+    const display = document.getElementById("tm-focus-remaining");
+    if (display) display.textContent = fmtTmTimer(remaining);
+    const fill = document.getElementById("tm-focus-fill");
+    if (fill && s.total > 0) fill.style.width = `${Math.min(100, (1 - remaining / s.total) * 100)}%`;
+    const play = document.getElementById("tm-focus-play");
+    const pause = document.getElementById("tm-focus-pause");
+    const stop = document.getElementById("tm-focus-stop");
+    if (play) play.disabled = false;
+    if (pause) pause.disabled = !s.running;
+    if (stop) stop.disabled = !s.running || remaining <= 0;
+  }
+  stopTmTimer();
+  const timerState = tmTimerLoad();
+  if (timerState.running) {
+    timerState.startedAt = Date.now();
+    tmTimerSave(timerState);
+    tmTimerInterval = setInterval(tmTimerUpdateUI, 1000);
+  }
+  tmTimerUpdateUI();
+
+  document.getElementById("tm-focus-play").onclick = () => {
+    const s = tmTimerLoad();
+    if (s.remaining <= 0) s.remaining = s.total || 1500;
+    s.running = true;
+    s.startedAt = Date.now();
+    tmTimerSave(s);
+    stopTmTimer();
+    tmTimerInterval = setInterval(tmTimerUpdateUI, 1000);
+    tmTimerUpdateUI();
+  };
+  document.getElementById("tm-focus-pause").onclick = () => {
+    const s = tmTimerLoad();
+    if (s.running && s.startedAt) {
+      const elapsed = Math.floor((Date.now() - s.startedAt) / 1000);
+      s.remaining = Math.max(0, s.remaining - elapsed);
+    }
+    s.running = false;
+    s.startedAt = null;
+    tmTimerSave(s);
+    stopTmTimer();
+    tmTimerUpdateUI();
+  };
+  document.getElementById("tm-focus-stop").onclick = () => {
+    const s = tmTimerLoad();
+    s.remaining = s.total || 1500;
+    s.running = false;
+    s.startedAt = null;
+    tmTimerSave(s);
+    stopTmTimer();
+    tmTimerUpdateUI();
+  };
 
   if ((board.steps || []).length) {
     const previous = loadJSON(LS_FOCUS, null);
@@ -707,6 +845,190 @@ async function renderSettings() {
   };
 }
 
+/* ============================ compte ============================ */
+function renderAccount() {
+  const PREFIX = "gt_";
+  let acctName = localStorage.getItem("gt_account_name") || "";
+
+  function allLocalData() {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(PREFIX)) data[key] = localStorage.getItem(key);
+    }
+    return data;
+  }
+
+  async function loadAiStatus() {
+    const box = document.getElementById("acct-ai");
+    try {
+      const s = await apiCall("/api/settings", undefined, "GET");
+      box.innerHTML = `
+        <div class="kv"><b>${t("account.ai.provider")}</b> <span>${esc(s.source || s.mode)}</span></div>
+        <div class="kv"><b>${t("account.ai.model")}</b> <span>${esc(s.model)}</span></div>
+        <div class="kv"><b>${t("account.ai.key")}</b> <span>${s.has_key ? t("common.yes") : t("common.no")}</span></div>
+        <div class="kv"><b>${t("account.auth")}</b> <span>${s.auth_token_set ? "défini" : "non défini"}</span></div>
+      `;
+    } catch (err) {
+      box.innerHTML = `<div class="alert">⚠️ ${esc(err.message)}</div>`;
+    }
+  }
+
+  function notify(title, message, onConfirm) {
+    showModal({ title, message, confirmLabel: t("common.ok"), onConfirm });
+  }
+
+  $app.innerHTML = `
+    <p><a class="back" href="#/">${t("app.back")}</a></p>
+    <div class="tool-head"><span class="icon">👤</span><h1>${t("account.title")}</h1></div>
+    <p class="tool-desc">${t("account.subtitle")}</p>
+
+    <div class="panel">
+      <h2 style="margin-top:0">${t("account.identity")}</h2>
+      <div class="field">
+        <label>${t("account.identity.label")}</label>
+        <input type="text" id="acct-name" placeholder="${t("account.identity.placeholder")}" value="${esc(acctName)}" />
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn secondary small" id="acct-save-name">${t("common.save")}</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h2 style="margin-top:0">${t("account.ai")}</h2>
+      <div id="acct-ai" class="loading" style="margin-top:10px">${t("settings.loading")}</div>
+      <div style="margin-top:10px">
+        <button class="btn secondary small" id="acct-ai-settings">${t("account.ai.link")}</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h2 style="margin-top:0">${t("account.auth")}</h2>
+      <p style="color:var(--muted);font-size:0.9rem;margin:6px 0">${t("account.auth.label")}</p>
+      <div class="field" style="margin-top:8px">
+        <input type="password" id="acct-token" placeholder="${t("account.auth.placeholder")}" />
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn" id="acct-token-set">${t("account.auth.set")}</button>
+        <button class="btn secondary" id="acct-token-clear" style="margin-left:8px">${t("account.auth.clear")}</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+      <h2 style="margin-top:0">${t("account.data")}</h2>
+      <p style="color:var(--muted);font-size:0.9rem;margin:6px 0">${t("account.data.desc")}</p>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input type="file" id="acct-import-file" accept=".json" />
+        <button class="btn secondary small" id="acct-import">${t("account.data.import")}</button>
+        <button class="btn" id="acct-export">${t("account.data.export")}</button>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn secondary" id="acct-reset">${t("account.data.reset")}</button>
+      </div>
+    </div>
+  `;
+
+  loadAiStatus();
+
+  document.getElementById("acct-save-name").onclick = () => {
+    localStorage.setItem("gt_account_name", document.getElementById("acct-name").value.trim());
+    notify(t("account.toast.saved"), "Votre nom de profil a été enregistré.");
+  };
+
+  document.getElementById("acct-ai-settings").onclick = () => {
+    location.hash = "/settings";
+  };
+
+  const tokenSet = document.getElementById("acct-token-set");
+  const tokenClear = document.getElementById("acct-token-clear");
+  async function refreshTokenStatusUi() {
+    try {
+      await apiCall("/api/settings", undefined, "GET");
+    } catch { /* ignore */ }
+  }
+  refreshTokenStatusUi();
+  tokenSet.onclick = async () => {
+    const value = document.getElementById("acct-token").value.trim();
+    if (!value) {
+      notify(t("app.error.request"), t("app.error.fill", { label: t("account.auth.placeholder") }));
+      return;
+    }
+    try {
+      await apiCall("/api/settings", { auth_token: value }, "PUT");
+      document.getElementById("acct-token").value = "";
+      notify(t("account.token.set"), "Le jeton d'authentification a été enregistré.");
+    } catch (err) {
+      notify(t("app.error.request"), esc(err.message));
+    }
+  };
+  tokenClear.onclick = async () => {
+    try {
+      await apiCall("/api/settings", { auth_token: "" }, "PUT");
+      notify(t("account.token.cleared"), "Le jeton d'authentification a été supprimé.");
+    } catch (err) {
+      notify(t("app.error.request"), esc(err.message));
+    }
+  };
+
+  document.getElementById("acct-export").onclick = () => {
+    const data = allLocalData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `goblin-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast(t("account.toast.exported"));
+  };
+
+  const importFile = document.getElementById("acct-import-file");
+  document.getElementById("acct-import").onclick = () => importFile.click();
+  importFile.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (typeof data !== "object" || data === null) throw new Error("format invalide");
+      let count = 0;
+      for (const [key, value] of Object.entries(data)) {
+        if (key.startsWith(PREFIX)) { localStorage.setItem(key, String(value)); count++; }
+      }
+      importFile.value = "";
+      notify(t("account.toast.imported"), `${count} entrée(s) importée(s).`);
+      renderAccount();
+    } catch (err) {
+      notify(t("app.error.request"), esc(err.message));
+    }
+  };
+
+  document.getElementById("acct-reset").onclick = () => {
+    showModal({
+      title: t("account.data.reset"),
+      message: "Première confirmation : cette action est irréversible. Toutes les données locales (historique, listes, préférences) seront supprimées. Continuer ?",
+      confirmLabel: "Continuer",
+      cancelLabel: t("common.cancel"),
+      onConfirm: () => {
+        showModal({
+          title: t("account.data.reset"),
+          message: t("account.confirm.reset"),
+          confirmLabel: "Oui, tout supprimer",
+          cancelLabel: t("common.cancel"),
+          onConfirm: () => {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith(PREFIX)) keys.push(key);
+            }
+            keys.forEach((k) => localStorage.removeItem(k));
+            notify(t("account.toast.reset"), "Toutes les données locales ont été réinitialisées.", () => renderAccount());
+          },
+        });
+      },
+    });
+  };
+}
+
 /* ============================ routage ============================ */
 const ROUTES = {
   "": renderHome,
@@ -714,6 +1036,7 @@ const ROUTES = {
   settings: renderSettings,
   taskmaster: renderTaskmaster,
   assistant: renderAssistant,
+  account: renderAccount,
 };
 
 function renderMagicBoard() {

@@ -28,3 +28,23 @@
 .formalizer__fav-label { margin: 0 0 6px; font-weight: 700; }
 .formalizer__favs { display: flex; flex-wrap: wrap; gap: 8px; }
 .formalizer__out { margin-top: 16px; }
+.formalizer__custom, .formalizer__voice {
+  margin-top: 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--surface);
+}
+.formalizer__custom label, .formalizer__voice label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.formalizer__custom textarea, .formalizer__voice textarea {
+  width: 100%;
+  min-height: 80px;
+}
+.formalizer__voice .btn {
+  margin-top: 8px;
+}
