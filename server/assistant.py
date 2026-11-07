@@ -19,7 +19,7 @@ MAX_STEPS = 6
 ASSISTANT_SYSTEM = """Tu es le « second cerveau » de l'utilisateur. Tu réponds en français, de façon concise, chaleureuse et pratique.
 
 Tu as accès aux outils suivants. Si une demande nécessite l'un d'eux, réponds UNIQUEMENT avec cet objet JSON (rien autour, pas de markdown) :
-{"tool": "<nom de l'outil>", "args": { ...arguments de l'outil ... }}
+{{"tool": "<nom de l'outil>", "args": {{ ...arguments de l'outil ... }}}}
 
 Si tu peux répondre directement sans outil, fais-le en texte simple, sans JSON.
 
