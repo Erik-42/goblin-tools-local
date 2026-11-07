@@ -56,6 +56,40 @@
     };
   }
 
+  // ----------------------------------------------------------------- temps estimé
+  function ownMinutes(node) {
+    return Number.isFinite(Number(node.minutes)) ? Number(node.minutes) : null;
+  }
+
+  function totalMinutes(node) {
+    const own = ownMinutes(node);
+    if (own !== null) return own;
+    const kids = (node.subtasks || []).filter(Boolean);
+    if (!kids.length) return null;
+    let sum = 0;
+    let any = false;
+    for (const k of kids) {
+      const t = totalMinutes(k);
+      if (t !== null) { sum += t; any = true; }
+    }
+    return any ? sum : null;
+  }
+
+  function distributeMinutes(node, total) {
+    const kids = (node.subtasks || []).filter(Boolean);
+    if (!kids.length) return;
+    const kidsTotal = kids.reduce((acc, k) => {
+      const t = totalMinutes(k);
+      return t === null ? acc : acc + t;
+    }, 0);
+    const ratio = kidsTotal > 0 ? total / kidsTotal : 1 / kids.length;
+    for (const k of kids) {
+      const kt = totalMinutes(k);
+      k.minutes = kt === null ? Math.round(total / kids.length) : Math.round(kt * ratio);
+      distributeMinutes(k, k.minutes);
+    }
+  }
+
   function normalizeNode(row) {
     if (!row || !String(row.text || "").trim()) return null;
     return {
@@ -277,17 +311,17 @@
         ${keepId === row.id
           ? `<input class="magic-todo__edit" data-edit="${row.id}" value="${esc(keepText || row.text)}">`
           : `<span class="magic-todo__text">${esc(row.text)}</span>`}
-        ${row.minutes ? `<span class="magic-todo__time">≈ ${esc(fmtMinutes(row.minutes))}</span>` : ""}
-        ${row.deadline ? `<span class="magic-todo__deadline">${esc(row.deadline)}</span>` : ""}
-        <button class="magic-todo__icon" type="button" data-break="${row.id}" aria-label="${t("magicTodo.breakdown")}">⤵</button>
+        <span class="magic-todo__time" data-minutes="${row.id}" role="button" tabindex="0" title="${t("magicTodo.minutes.title")}">${totalMinutes(row) !== null ? "≈ " + esc(fmtMinutes(totalMinutes(row))) : "—"}</span>
+        ${row.deadline ? `<span class="magic-todo__deadline" title="${t("magicTodo.deadline")}">${esc(row.deadline)}</span>` : ""}
+        <button class="magic-todo__icon" type="button" data-break="${row.id}" aria-label="${t("magicTodo.breakdown")}" title="${t("magicTodo.breakdown")}">⤵</button>
         <div class="magic-todo__menu-wrap">
-          <button class="magic-todo__icon" type="button" data-options="${row.id}" aria-label="${t("magicTodo.options")}" aria-expanded="${openMenu === row.id}">⋯</button>
+          <button class="magic-todo__icon" type="button" data-options="${row.id}" aria-label="${t("magicTodo.options")}" aria-expanded="${openMenu === row.id}" title="${t("magicTodo.options")}">⋯</button>
           <div class="magic-todo__menu" ${openMenu === row.id ? "" : "hidden"}>
-            <button type="button" data-act="estimate" data-id="${row.id}">${t("magicTodo.estimate")}</button>
-            <button type="button" data-act="deadline" data-id="${row.id}">${t("magicTodo.deadline")}</button>
-            <button type="button" data-act="edit" data-id="${row.id}">${t("magicTodo.edit")}</button>
-            <button type="button" data-act="subtask" data-id="${row.id}">${t("magicTodo.subtask")}</button>
-            <button type="button" data-act="remove" data-id="${row.id}">${t("magicTodo.remove")}</button>
+            <button type="button" data-act="estimate" data-id="${row.id}" title="${t("magicTodo.estimate")}">${t("magicTodo.estimate")}</button>
+            <button type="button" data-act="deadline" data-id="${row.id}" title="${t("magicTodo.deadline")}">${t("magicTodo.deadline")}</button>
+            <button type="button" data-act="edit" data-id="${row.id}" title="${t("magicTodo.edit")}">${t("magicTodo.edit")}</button>
+            <button type="button" data-act="subtask" data-id="${row.id}" title="${t("magicTodo.subtask")}">${t("magicTodo.subtask")}</button>
+            <button type="button" data-act="remove" data-id="${row.id}" title="${t("magicTodo.remove")}">${t("magicTodo.remove")}</button>
           </div>
         </div>
         ${openMenu === "deadline-" + row.id ? `<input class="magic-todo__date" type="date" data-date="${row.id}" value="${esc(row.deadline)}">` : ""}
@@ -678,6 +712,51 @@
       });
       input.addEventListener("blur", finish);
     });
+    root.querySelectorAll(".magic-todo__time").forEach((el) => {
+      el.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const id = Number(el.dataset.minutes);
+        const row = findItem(state, id);
+        if (!row) return;
+        const li = el.closest(".magic-todo__item");
+        if (!li) return;
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.step = "1";
+        input.value = row.minutes !== null ? String(row.minutes) : "";
+        input.className = "magic-todo__minutes";
+        input.dataset.minutes = String(id);
+        el.replaceWith(input);
+        input.focus();
+        const finish = () => {
+          const raw = input.value.trim();
+          commit(() => {
+            const target = findItem(state, id);
+            if (!target) return;
+            if (!raw) {
+              target.minutes = null;
+            } else {
+              const m = Number(raw);
+              if (Number.isFinite(m) && m >= 0) {
+                target.minutes = Math.round(m);
+                if (target.subtasks && target.subtasks.length) distributeMinutes(target, target.minutes);
+              }
+            }
+            openMenu = null;
+          });
+          paint();
+        };
+        const cancel = () => {
+          paint();
+        };
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") finish();
+          if (event.key === "Escape") cancel();
+        });
+        input.addEventListener("blur", finish);
+      });
+    });
     root.querySelectorAll('.magic-todo__item[draggable="true"]').forEach((row) => {
       row.addEventListener("dragstart", (event) => {
         event.dataTransfer.setData("text/plain", row.dataset.id);
@@ -754,7 +833,13 @@
       try {
         const row = findItem(load(), id);
         const result = await apiCall("/api/estimator", { task: row.text, spice: state.spice });
-        commit(() => { findItem(state, id).minutes = result.total_minutes; busyId = null; });
+        commit(() => {
+          const target = findItem(state, id);
+          target.minutes = result.total_minutes;
+          const kids = target.subtasks || [];
+          if (kids.length) distributeMinutes(target, result.total_minutes);
+          busyId = null;
+        });
       } catch (err) {
         busyId = null;
         paint();
@@ -780,8 +865,14 @@
       const steps = normalize(result.steps);
       commit(() => {
         const target = findItem(state, id);
-        target.subtasks = steps.map(stepToItem);
+        if (!target.subtasks || target.subtasks.length === 0) {
+          target.subtasks = steps.map(stepToItem);
+        } else {
+          target.subtasks = [...target.subtasks, ...steps.map(stepToItem)];
+        }
         target.open = true;
+        const parentTotal = totalMinutes(target);
+        if (parentTotal !== null) distributeMinutes(target, parentTotal);
         busyId = null;
       });
       ToolHistory.remember("magic-todo", {
