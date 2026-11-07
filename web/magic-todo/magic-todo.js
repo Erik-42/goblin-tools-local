@@ -256,6 +256,17 @@
     return found;
   }
 
+  function findParent(state, itemId) {
+    let found = null;
+    walk(activeTab(state).items, (row) => {
+      if (row.subtasks && row.subtasks.some((k) => k.id === itemId)) {
+        found = row;
+        return false;
+      }
+    });
+    return found;
+  }
+
   function findInTab(tab, itemId) {
     let found = null;
     walk(tab.items, (row) => {

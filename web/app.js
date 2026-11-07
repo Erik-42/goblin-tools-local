@@ -392,7 +392,9 @@ function renderTaskmaster() {
   const step = activeList.steps[focus.idx];
   body.innerHTML = `
     <div class="focus-card">
-      <div style="color:var(--muted)">« ${esc(activeList.name)} » · ${t("taskmaster.stepOf", { idx: focus.idx + 1, total })}</div>
+      <div style="color:var(--muted)">« ${esc(activeList.name)} »</div>
+      <div style="color:var(--ink);font-weight:700;margin-bottom:6px">${t("taskmaster.stepOf", { idx: focus.idx + 1, total })}</div>
+      <div style="color:var(--muted);font-size:0.85rem;margin-bottom:10px">${t("taskmaster.count", { done: focus.done, total })}</div>
       <div class="step-text">${esc(step.text)}</div>
       ${step.substeps.length ? `<div class="sub-hint">${step.substeps.map(esc).join("\n")}</div>` : ""}
       <div class="focus-actions">

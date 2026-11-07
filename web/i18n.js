@@ -203,6 +203,7 @@
       "taskmaster.skipCount": "{n} passée",
       "taskmaster.skipCountMany": "{n} passées",
       "taskmaster.stepOf": "étape {idx} / {total}",
+      "taskmaster.count": "{done} sur {total} terminées",
       "taskmaster.doneLabel": "✅ C'est fait",
       "taskmaster.skipLabel": "⏭️ Passer",
 
@@ -470,6 +471,7 @@
       "taskmaster.skipCount": "{n} skipped",
       "taskmaster.skipCountMany": "{n} skipped",
       "taskmaster.stepOf": "step {idx} / {total}",
+      "taskmaster.count": "{done} of {total} done",
       "taskmaster.doneLabel": "✅ Done",
       "taskmaster.skipLabel": "⏭️ Skip",
 
