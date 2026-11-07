@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--volume=/allowed/directory/in/host:/allowed/directory/in/container",
+        "ghcr.io/mark3labs/mcp-filesystem-server:latest",
+        "/allowed/directory/in/container"
+      ]
+    }
+  }
+}

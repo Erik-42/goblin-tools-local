@@ -1,0 +1,7 @@
+{
+  "name": "get-single-web-page-content",
+  "arguments": {
+    "url": "https://example.com/article",
+    "maxContentLength": 5000
+  }
+}

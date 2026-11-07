@@ -1,0 +1,7 @@
+{
+  "name": "get-web-search-summaries",
+  "arguments": {
+    "query": "TypeScript MCP server",
+    "limit": 5
+  }
+}

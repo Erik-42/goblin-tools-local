@@ -1,0 +1,6 @@
+services:
+  api:
+    volumes:
+    - type: bind
+      source: /path/to/your/mcp/directory
+      target: /app/mcp

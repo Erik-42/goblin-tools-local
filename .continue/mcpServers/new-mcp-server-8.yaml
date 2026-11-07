@@ -1,0 +1,8 @@
+{
+  "name": "full-web-search",
+  "arguments": {
+    "query": "TypeScript MCP server",
+    "limit": 3,
+    "includeContent": true
+  }
+}
