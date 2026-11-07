@@ -138,7 +138,7 @@ async def _post(endpoint: dict, system: str, user: str, temperature: float, want
 
 # ----------------------------------------------------------------- health
 _health_cache = {"status": None, "ts": 0.0}
-HEALTH_TTL = 30.0  # secondes
+HEALTH_TTL = 5.0  # secondes — état réactif pour éviter l'illusion d'instabilité
 
 
 async def probe(base_url: str, timeout: float = 3.0) -> bool:
