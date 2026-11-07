@@ -471,6 +471,7 @@
     const keepText = editing ? editing.value : "";
     const keepId = editing ? Number(editing.dataset.edit) : null;
     root.innerHTML = `
+      <p><a class="back" href="#/">${t("app.back")}</a></p>
       <div class="magic-todo">
         <div class="magic-todo__head">
           <div>

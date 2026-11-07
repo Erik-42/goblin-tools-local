@@ -42,7 +42,7 @@
       const data = JSON.parse(localStorage.getItem(FAV_KEY));
       if (Array.isArray(data) && data.length) return data.filter((id) => TONES.some((tone) => tone[0] === id));
     } catch { /* garde les favoris par défaut */ }
-    return ["more-professional", "more-sociable"];
+    return ["more-professional", "more-sociable", "my-voice", "custom"];
   }
 
   function mount(container) {

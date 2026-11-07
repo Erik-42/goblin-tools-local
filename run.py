@@ -1,11 +1,13 @@
 """Programmatic entry point used by both `python run.py` and the packaged .exe."""
 import argparse
 import os
+import secrets
 import socket
 import sys
 import threading
 import time
 import webbrowser
+from pathlib import Path
 
 import uvicorn
 
@@ -17,6 +19,8 @@ for _i, _arg in enumerate(sys.argv):
         break
 
 from server import __version__
+from server import data_store
+from server.local_llm.manager import get_manager, register_shutdown
 from server.main import app
 from server.settings_store import load as load_settings
 
@@ -50,6 +54,32 @@ def main() -> None:
     args = parser.parse_args()
 
     settings = load_settings()
+
+    # Gestionnaire du moteur LLM local : cle API aleatoire par session,
+    # arret propre a la sortie (atexit + signaux).
+    data_dir = settings.get("data_dir") or None
+    manager = get_manager(Path(data_dir) if data_dir else None)
+    manager.api_key = secrets.token_urlsafe(16)
+    register_shutdown(manager)
+
+    # Si le moteur est deja installe (binaire + modele), le demarrer sans bloquer.
+    try:
+        _st = manager.status()
+        if (
+            _st["engine_present"]
+            and _st["model_present"]
+            and _st["state"] not in ("ready", "starting", "downloading")
+        ):
+            manager.install()
+    except Exception:
+        pass
+
+    # Verrou d'instance unique sur la base de donnees persistee.
+    try:
+        data_store.get_store().acquire_instance_lock()
+    except RuntimeError as exc:
+        print(f"AVERTISSEMENT : {exc}")
+        print("L'application va toutefois continuer (verrou non bloquant en dev).")
 
     mode = args.mode or settings.get("mode") or "server"
     host = args.host or settings.get("host") or (

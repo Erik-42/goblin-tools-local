@@ -1,59 +1,73 @@
 <div align="center">
 
-# 👺 Goblin Tools — édition locale
+# 🪨 Une Étape à la Fois
 
-**Quand ça paraît trop grand, trop compliqué, le gobelin te file un coup de main.**
+![Bannière](assets/bannière-github-une-étape-à-la-fois-svg-1280×320.svg)
 
-L'IA découpe les tâches en petites étapes faisables — 9 outils du quotidien, tous en local, les données ne quittent pas ton ordinateur.
+**Trop grand, trop flou, pas envie ? L'IA te montre juste la prochaine étape.**
 
-![Python](https://img.shields.io/badge/Python-3.10+-2e9e6b?logo=python&logoColor=white)
-![Dépendances](https://img.shields.io/badge/front_sans_build-HTML%2FCSS%2FJS-f1c40f)
-![Platform](https://img.shields.io/badge/Windows-x64-0078d4?logo=windows&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-2e9e6b)
-![Confidentialité](https://img.shields.io/badge/confidentialit%C3%A9-donn%C3%A9es_locales-blueviolet)
-![Version](https://img.shields.io/badge/version-0.1.0-2e9e6b)
+Une application locale qui découpe les tâches en petites étapes faisables —
+pensée pour les personnes **TDAH** et tous les cerveaux que les longues listes paralysent.
+Un exe, un double-clic, et vos données ne quittent jamais votre ordinateur.
 
-Inspiré de [goblin.tools](https://goblin.tools) (outils de découpage de tâches pensés pour le TDAH et la neurodiversité),
-réécrit en application locale : un exe, ou trois paquets Python, suffisent pour tout lancer.
+![Python](https://img.shields.io/badge/Python-3.10+-2A9D8F?logo=python&logoColor=white)
+![Front](https://img.shields.io/badge/front_sans_build-HTML%2FCSS%2FJS-FFD98A)
+![Plateforme](https://img.shields.io/badge/Windows-x64-0078d4?logo=windows&logoColor=white)
+![Licence](https://img.shields.io/badge/License-MIT-2A9D8F)
+![Confidentialité](https://img.shields.io/badge/confidentialit%C3%A9-donn%C3%A9es_locales-6BA85C)
+![Version](https://img.shields.io/badge/version-0.1.0-2A9D8F)
+
+*Inspiré de [goblin.tools](https://goblin.tools) (outils de découpage de tâches pensés pour le TDAH
+et la neurodiversité), réécrit en application 100 % locale avec l'aide d'un petit gobelin guide.* 🺺
 
 </div>
 
-## Aperçu
+---
 
-| Accueil · les 9 outils d'un coup | Magic ToDo · des étapes à cocher | Réglages · n'importe quel modèle compatible OpenAI |
-|---|---|---|
-| ![Accueil](docs/home.png) | ![Magic ToDo](docs/magic-todo.png) | ![Réglages](docs/settings.png) |
+## Pourquoi cette application ?
 
-Un bouton lune / soleil dans la barre passe en mode sombre. Sans choix enregistré, le thème suit celui du système. Le choix est mémorisé dans le navigateur.
+Si vous avez un TDAH, vous connaissez le phénomène : la tâche n'est pas difficile,
+c'est **le premier pas** qui est infranchissable. « Organiser un anniversaire » n'est pas
+une tâche, c'est un nuage. Cette application souffle sur le nuage et ne laisse flotter
+que **la première pierre** — les suivantes resteront dans la brume jusqu'à ce que vous
+ayez coché celle-ci.
 
-## ✨ Les outils
+Trois principes guident toute l'interface :
+
+1. **Une seule étape en lumière.** L'étape en cours est mise en avant (jaune doux), le reste s'estompe.
+2. **Zéro friction de démarrage.** Un exe, un double-clic, pas de compte, pas d'installation.
+3. **Vos données chez vous.** Rien ne sort de la machine, sauf vers l'API du modèle que vous choisissez.
+
+## ✨ Les 9 outils
 
 | Outil | À quoi il sert |
 |---|---|
-| ✅ **Magic ToDo** | Une grosse tâche du type « organiser un anniversaire » devient, en un clic, 3 à 8 petites étapes à faire tout de suite |
-| ⏯️ **Taskmaster** | Une seule étape à l'écran — on coche, et la suivante arrive. Contre l'angoisse de la liste |
-| ✍️ **Formalizer** | Réécrit un texte parlé en 7 tons : amical, professionnel, excuses, enthousiaste… |
-| ⚖️ **Judge** | Un message dont tu n'es pas sûr du ton ? Colle-le, l'outil en sort les émotions implicites |
-| 🎓 **Professor** | Du « comme à un enfant de 6 ans » au niveau expert, quatre profondeurs pour n'importe quel sujet |
-| 💡 **Consultant** | Quand tu hésites : liste les options, avantages et inconvénients, puis une recommandation |
-| ⏱️ **Estimator** | On sous-estime toujours la durée — il détaille chaque sous-tâche, plutôt trop haut que trop bas |
-| 🧠 **Compiler** | « Compile » un brainstorm en vrac en une liste d'actions classées |
-| 👨‍🍳 **Chef** | Tu donnes les ingrédients sous la main, il propose des recettes sans courses en plus |
+| ☁️ **Le Nuage** <sub>· Magic ToDo</sub> | « Organiser un anniversaire » devient, en un clic, 3 à 8 petites étapes à faire tout de suite |
+| 🏮 **La Lanterne** <sub>· Taskmaster</sub> | Une seule étape à l'écran, éclairée — on la coche, la suivante arrive. Contre l'angoisse de la liste |
+| ✍️ **Le Traducteur** <sub>· Formalizer</sub> | Réécrit un texte parlé en 7 tons : amical, professionnel, excuses, enthousiaste… |
+| 🪞 **Le Miroir** <sub>· Judge</sub> | Un message dont vous ne savez pas s'il sonne mal ? Il reflète les émotions implicites |
+| 🎓 **Le Guide** <sub>· Professor</sub> | Du « comme à un enfant de 6 ans » au niveau expert : quatre profondeurs pour tout sujet |
+| 🧭 **Le Carrefour** <sub>· Consultant</sub> | Quand vous hésitez : options, avantages et inconvénients, puis une recommandation |
+| ⏳ **Le Sablier** <sub>· Estimator</sub> | On sous-estime toujours la durée — il détaille chaque sous-tâche, plutôt trop haut que trop bas |
+| 🧺 **Le Rangeur** <sub>· Compiler</sub> | Met de l'ordre dans le brainstorm en vrac : une liste d'actions classées |
+| 👨‍🍳 **Le Cuisinier** <sub>· Chef</sub> | Vous donnez les ingrédients sous la main, il propose des recettes sans courses en plus |
 
-ToDo et Taskmaster sont reliés : le découpage se sauvegarde en liste, puis le mode focus avance étape par étape.
+**Le Nuage et La Lanterne sont reliés** : le découpage se sauvegarde en liste, puis La Lanterne
+avance étape par étape. Dissiper le nuage, puis avancer une pierre à la fois.
 
 ## 🚀 Démarrage
 
 ### Option 1 : télécharger l'exe (recommandé, rien à installer)
 
-Va dans [Releases](../../releases), télécharge `GoblinTools.exe` (environ 16 Mo, un seul fichier), **double-clique** —
-le service démarre en local et le navigateur s'ouvre. Fermer la fenêtre de console arrête tout.
+Rendez-vous dans [Releases](../../releases), téléchargez `UneEtapeALaFois.exe`
+(un seul fichier, environ 16 Mo), **double-cliquez** — le service démarre en local
+et le navigateur s'ouvre tout seul. Fermer la fenêtre de console arrête tout.
 
 ### Option 2 : lancer les sources
 
 ```bash
-git clone https://github.com/lwjyzw/goblin-tools-local.git
-cd goblin-tools-local
+git clone https://github.com/Erik-42/une-etape-a-la-fois.git
+cd une-etape-a-la-fois
 # Windows : double-clic sur start.bat (les dépendances s'installent au premier lancement)
 # À la main :
 pip install -r requirements.txt
@@ -62,31 +76,59 @@ python run.py          # → http://127.0.0.1:8765
 
 ### Première utilisation : configurer le modèle (1 minute)
 
-Ouvre <http://127.0.0.1:8765> → ⚙️ en haut à droite → Réglages → renseigne une API compatible OpenAI →
-clique sur « Tester la connexion » → c'est prêt.
+Ouvrez <http://127.0.0.1:8765> → ⚙️ en haut à droite → **Réglages** → renseignez une API
+compatible OpenAI → « Tester la connexion » → c'est prêt.
 
-| Fournisseur | URL de base | Nom du modèle |
+| Fournisseur | URL de base | Modèle |
 |---|---|---|
 | DeepSeek | `https://api.deepseek.com/v1` | `deepseek-chat` |
-| Qwen | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus` |
-| Kimi | `https://api.moonshot.cn/v1` | `moonshot-v1-8k` |
+| Qwen | `https://dashscope.aliyuncalc.com/compatible-mode/v1` | `qwen-plus` |
+| Mistral | `https://api.mistral.ai/v1` | `mistral-small-latest` |
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
+
+*N'importe quel serveur compatible OpenAI fonctionne — y compris un modèle tournant
+sur votre propre machine (Ollama, LM Studio), pour un fonctionnement entièrement hors ligne.*
 
 ## 🔒 Confidentialité
 
-- En dehors de l'API de modèle que tu configures, l'application **ne contacte aucun tiers** — pas de statistiques, pas de traceur, pas de compte
-- La configuration API est sur la machine, dans le répertoire de données utilisateur (hors de l'application, fichier `goblin-settings.json`) : elle est retrouvée après une réinstallation ou une nouvelle session. L'historique et les listes restent dans le localStorage du navigateur
-- Le thème (clair ou sombre) est lui aussi stocké dans le navigateur
-- Le répertoire de données peut être déplacé avec la variable d'environnement `GOBLIN_DATA_DIR` ou le champ « Répertoire de données » des réglages
-- Téléphone et ordinateur sur le même réseau : le navigateur du téléphone peut ouvrir l'IP de l'ordinateur sur le port 8765 (l'interface est responsive)
+- En dehors de l'API du modèle que **vous** configurez, l'application ne contacte aucun tiers :
+  pas de statistiques, pas de traceur, pas de compte
+- La configuration API est stockée sur la machine (fichier `goblin-settings.json`,
+  dans le répertoire de données utilisateur) : elle survit aux réinstallations
+- Historique et listes restent dans le navigateur (localStorage)
+- Le répertoire de données est déplaçable via la variable `GOBLIN_DATA_DIR`
+  ou le champ « Répertoire de données » des réglages
+- Téléphone et ordinateur sur le même réseau : l'interface responsive s'ouvre
+  depuis le navigateur du téléphone (IP de l'ordinateur, port 8765)
+
+## 🎨 Design pensé TDAH
+
+L'interface suit la même logique que le logo : **seule la première pierre est éclairée.**
+
+| Couleur | Clair | Sombre | Rôle |
+|---|---|---|---|
+| 🟫 Fond nuit / Crème | `#F7F2E9` | `#221E17` | Fond principal (jamais de blanc pur ni de noir pur) |
+| 🟩 Turquoise action | `#2A9D8F` | `#4FC3B2` | La seule couleur d'action : boutons, liens (éclaircie en sombre) |
+| 🩵 Turquoise clair | `#6FD1C3` | `#6FD1C3` | Survol, validations |
+| 🟠 Corail | `#E8806B` | `#F0967F` | Accents, focus clavier (chaud, jamais alarmant) |
+| 🟡 Jaune doux | `#FFD98A` | `#FFD98A` | L'étape en cours — la lanterne du gobelin, identique sur les deux thèmes |
+| ⬛ Texte | `#2F3B2A` | `#F2E9DA` | Texte principal (on inverse : le crème devient la couleur de texte) |
+| 🟨 Cartes | `#E9F2EE` | `#2C271E` | Cartes et fond alterné, à peine distincts du fond |
+| 🟧 Bordures | `#DCD2BC` | `#3A352C` | Discrètes dans les deux thèmes |
+
+Règles d'or : **une seule** étape mise en avant à la fois, pas de rouge pour les erreurs
+(on préfère le corail et un message explicite), fond **chaud** même en mode sombre
+(les fonds gris-bleu fatiguent), et le mode sombre suit le système
+(bouton lune/soleil, choix mémorisé).
 
 ## 🏗️ Stack et structure
 
-Choix assumé, zéro étape de build : **3 paquets Python côté serveur, aucun framework côté front**.
+Choix assumé : **zéro étape de build**. Trois paquets Python côté serveur,
+aucun framework côté front.
 
 ```
-goblin-app/
-├─ GoblinTools.exe        # binaire PyInstaller (hors dépôt, voir Releases)
+une-etape-a-la-fois/
+├─ UneEtapeALaFois.exe    # binaire PyInstaller (hors dépôt, voir Releases)
 ├─ run.py                 # entrée : serveur + navigateur + port suivant si 8765 est pris
 ├─ server/
 │  ├─ main.py             # routes FastAPI + fichiers statiques
@@ -102,9 +144,9 @@ goblin-app/
 
 ```bash
 pip install pyinstaller
-python -m PyInstaller --noconfirm --onefile --console --name GoblinTools \
+python -m PyInstaller --noconfirm --onefile --console --name UneEtapeALaFois \
   --add-data "web;web" --collect-all uvicorn run.py
-# le binaire est dans dist/GoblinTools.exe
+# le binaire est dans dist/UneEtapeALaFois.exe
 ```
 
 ### Développement local
@@ -116,29 +158,24 @@ python test/mock_llm.py                                   # faux modèle pour tr
 
 ## 🔖 Versionnage (SemVer)
 
-Ce projet suit le **Versionnage Sémantique (Semantic Versioning, SemVer)** au format **`MAJEUR.MINEUR.CORRECTIF`** (`X.Y.Z`).
+Ce projet suit le **Versionnage Sémantique** : `MAJEUR.MINEUR.CORRECTIF` (`X.Y.Z`).
+Voir [VERSIONING.md](VERSIONING.md) pour la politique détaillée.
 
-| Composant | Quand l'incrémenter |
-|---|---|
-| **MAJEUR** (X) | Changements incompatibles avec les versions précédentes (suppression de fonctionnalité, API cassante, refonte majeure) |
-| **MINEUR** (Y) | Nouvelle fonctionnalité ajoutée sans casser la compatibilité, améliorations mineures |
-| **CORRECTIF** (Z) | Correction de bug ou de sécurité sans ajout de nouvelle fonctionnalité |
+## 🙏 Crédits
 
-Pour les versions **`0.Y.Z`** (développement initial, inférieure à `1.0.0`), tout peut changer à tout moment — aucune garantie de stabilité.
+- [goblin.tools](https://goblin.tools) — l'application originale de découpage de tâches
+  pensée pour le TDAH et la neurodiversité
+- [lwjyzw/goblin-tools-local](https://github.com/lwjyzw/goblin-tools-local) — la version
+  locale dont ce projet est le point de départ
 
-La version courante (`0.1.0`) est :
-- affichée au lancement par `run.py` (`Goblin Tools — édition locale v0.1.0 [...]`) ;
-- exposée par l'endpoint `GET /api/version`, qui renvoie `{"version": "0.1.0"}` ;
-- inscrite dans le fichier `VERSION` à la racine et dans `server/__init__.py` (`__version__`).
+## 📜 Licence
 
-Pour le détail des règles (versions `1.0.0`, pré-versions `alpha`/`beta`/`rc`, métadonnées de build `+build`, bonnes pratiques, outils recommandés), consultez [VERSIONING.md](VERSIONING.md).
+MIT — voir [LICENSE](LICENSE).
 
-## 🙏 Remerciements
+---
 
-- [Goblin Tools](https://goblin.tools) — l'idée produit et la forme des outils
-- FastAPI / uvicorn / httpx / PyInstaller — le chemin « projet Python → double-clic sur un exe » tient en 16 Mo
+<div align="center">
 
-## 📄 Licence
+**Le gobelin te tend la lanterne. La première pierre est là, juste devant.** 🺺✨
 
-[MIT](LICENSE)
-
+</div>

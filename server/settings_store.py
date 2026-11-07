@@ -30,11 +30,14 @@ DEFAULT_CORS_ORIGINS = _env("GOBLIN_CORS_ORIGINS", "")
 # Fournisseur IA
 DEFAULT_AI_MODE = _env("GOBLIN_AI_MODE", "auto")       # distant | local | auto
 
+# Provenance de l'IA : "local" (moteur llama-server bundle) ou "external" (API distante).
+DEFAULT_PROVIDER = _env("GOBLIN_LLM_PROVIDER", "external")  # local | external
+
 # Clés persistables. port est converti en int à la lecture.
 _SETTING_KEYS = (
     "base_url", "api_key", "model",
     "mode", "host", "port", "data_dir", "auth_token", "cors_origins",
-    "ai_mode",
+    "ai_mode", "provider",
 )
 
 
@@ -50,6 +53,7 @@ def load() -> dict:
         "auth_token": DEFAULT_AUTH_TOKEN,
         "cors_origins": DEFAULT_CORS_ORIGINS,
         "ai_mode": DEFAULT_AI_MODE,
+        "provider": DEFAULT_PROVIDER,
     }
     if SETTINGS_PATH.exists():
         try:

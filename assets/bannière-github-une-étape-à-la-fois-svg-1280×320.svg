@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" role="img" aria-label="Bannière Une Étape à la Fois : un chemin de pierres éclairées une à une, avec un gobelin guide à la lanterne">
+  <defs>
+    <linearGradient id="ciel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBF6EE"/>
+      <stop offset="1" stop-color="#E9F2EE"/>
+    </linearGradient>
+    <linearGradient id="brumeH" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FBF6EE" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#FBF6EE" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#FBF6EE" stop-opacity="0.9"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFD98A" stop-opacity="0.85"/>
+      <stop offset="0.55" stop-color="#FFD98A" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#FFD98A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- fond -->
+  <rect width="1280" height="320" fill="url(#ciel)"/>
+
+  <!-- sol discret -->
+  <path d="M 0 320 Q 320 268 640 284 T 1280 258 L 1280 320 Z" fill="#DCE9E2" opacity="0.6"/>
+
+  <!-- halo de la grande pierre de départ -->
+  <circle cx="300" cy="252" r="96" fill="url(#halo)"/>
+
+  <!-- chemin de pierres : la première éclairée, les suivantes s'estompent -->
+  <g>
+    <ellipse cx="300" cy="252" rx="44" ry="24" fill="#2A9D8F"/>
+    <ellipse cx="300" cy="246" rx="44" ry="24" fill="#3FB8A8"/>
+
+    <ellipse cx="418" cy="228" rx="32" ry="18" fill="#E8806B"/>
+    <ellipse cx="418" cy="224" rx="32" ry="18" fill="#F0967F"/>
+
+    <ellipse cx="520" cy="212" rx="25" ry="14" fill="#7FB5A8"/>
+    <ellipse cx="520" cy="209" rx="25" ry="14" fill="#94CBBE"/>
+
+    <ellipse cx="612" cy="200" rx="20" ry="11" fill="#B5A38A"/>
+    <ellipse cx="612" cy="198" rx="20" ry="11" fill="#C8B99F"/>
+
+    <ellipse cx="694" cy="192" rx="16" ry="9" fill="#CFC6B2"/>
+    <ellipse cx="694" cy="190" rx="16" ry="9" fill="#DDD5C3"/>
+
+    <ellipse cx="768" cy="186" rx="12" ry="7" fill="#DCD6C7"/>
+    <ellipse cx="768" cy="185" rx="12" ry="7" fill="#E7E2D4"/>
+
+    <ellipse cx="834" cy="182" rx="9" ry="5" fill="#E5E0D2"/>
+    <ellipse cx="834" cy="181" rx="9" ry="5" fill="#EEEADD"/>
+
+    <ellipse cx="892" cy="179" rx="7" ry="4" fill="#ECE8DC"/>
+    <ellipse cx="892" cy="178" rx="7" ry="4" fill="#F2EFE5"/>
+  </g>
+
+  <!-- brume sur les pierres lointaines -->
+  <rect x="420" y="120" width="860" height="160" fill="url(#brumeH)"/>
+
+  <!-- gobelin guide à la lanterne, marchant près de la première pierre -->
+  <g transform="translate(244, 148)">
+    <path d="M -4 -12 L -20 -34 L -12 -8 Z" fill="#5A8F4E"/>
+    <path d="M 40 -12 L 56 -34 L 48 -8 Z" fill="#5A8F4E"/>
+    <circle cx="18" cy="8" r="24" fill="#6BA85C"/>
+    <path d="M -2 -8 Q 18 -26 38 -8 Q 28 -13 18 -11 Q 8 -13 -2 -8 Z" fill="#557F45"/>
+    <circle cx="9" cy="6" r="4" fill="#2F3B2A"/>
+    <circle cx="27" cy="6" r="4" fill="#2F3B2A"/>
+    <circle cx="10.2" cy="4.8" r="1.3" fill="#FFFFFF"/>
+    <circle cx="28.2" cy="4.8" r="1.3" fill="#FFFFFF"/>
+    <path d="M 11 17 Q 18 22 25 17" stroke="#2F3B2A" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <!-- corps -->
+    <path d="M 4 30 Q 18 74 32 30 Z" fill="#4F7D44"/>
+    <!-- lanterne -->
+    <line x1="38" y1="24" x2="50" y2="42" stroke="#4A3B28" stroke-width="3.4" stroke-linecap="round"/>
+    <circle cx="50" cy="42" r="9" fill="#FFD98A"/>
+    <circle cx="50" cy="42" r="9" fill="none" stroke="#B8863B" stroke-width="2.6"/>
+    <circle cx="50" cy="42" r="4" fill="#FFF3D0"/>
+  </g>
+  <circle cx="294" cy="190" r="28" fill="url(#halo)"/>
+
+  <!-- titre -->
+  <text x="920" y="140" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="76" font-weight="700" fill="#2F3B2A" letter-spacing="1">Une Étape à la Fois</text>
+  <text x="920" y="196" text-anchor="middle" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="28" fill="#2A9D8F" font-weight="600">Des grandes tâches aux petites étapes</text>
+  <text x="920" y="240" text-anchor="middle" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="21" fill="#7A6F5C">IA locale, pensée pour les personnes TDAH — vos données ne quittent pas votre machine</text>
+
+  <!-- petit rappel du logo : trois pastilles de pas -->
+  <g transform="translate(1050, 262)">
+    <circle cx="0" cy="0" r="8" fill="#2A9D8F"/>
+    <circle cx="24" cy="0" r="6" fill="#F0967F"/>
+    <circle cx="44" cy="0" r="4" fill="#C8B99F"/>
+  </g>
+</svg>

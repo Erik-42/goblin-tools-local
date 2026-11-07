@@ -216,6 +216,11 @@ Réponds uniquement en JSON, au format :
  "advice": "le conseil"}
 Rédige tout le texte en français."""
 
+CONSULTANT_ADVICE_SYSTEM = """Tu donnes un conseil concret basé sur les avantages et inconvénients fournis. \
+Réponds uniquement en JSON, au format :
+{"advice": "le conseil"}
+Rédige le texte en français."""
+
 
 async def consultant(data: dict):
     situation = _require(data, "situation", "La description")
@@ -223,6 +228,25 @@ async def consultant(data: dict):
     if isinstance(options, str):
         options = [line.strip() for line in options.split("\n") if line.strip()]
     option_text = "\n".join(f"- {o}" for o in options if str(o).strip())
+    provided_pros = data.get("pros")
+    provided_cons = data.get("cons")
+
+    if provided_pros is not None or provided_cons is not None:
+        pros = str(provided_pros or "").strip()
+        cons = str(provided_cons or "").strip()
+        user = f"Situation : {situation}\nAvantages : {pros}\nInconvénients : {cons}\nDonne un conseil concret basé sur ces avantages et ces inconvénients."
+        if option_text:
+            user += f"\nPistes déjà envisagées :\n{option_text}"
+        reply = await llm.chat(CONSULTANT_ADVICE_SYSTEM, user, want_json=True)
+        parsed = llm.parse_json(reply)
+        advice = str(parsed.get("advice") or parsed.get("recommendation") or "").strip()
+        return {
+            "pros": pros,
+            "cons": cons,
+            "advice": advice,
+            "recommendation": advice,
+        }
+
     user = f"Situation : {situation}"
     if option_text:
         user += f"\nPistes déjà envisagées :\n{option_text}"

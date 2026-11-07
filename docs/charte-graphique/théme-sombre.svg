@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="720" height="240" rx="16" fill="#221E17"/>
+  <text x="36" y="44" font-size="20" font-weight="700" fill="#F2E9DA">Palette sombre « Une Étape à la Fois »</text>
+  <g font-size="15" fill="#F2E9DA" text-anchor="middle">
+    <rect x="36" y="64" width="112" height="84" rx="12" fill="#221E17" stroke="#3A352C"/>
+    <text x="92" y="140" font-weight="600">Fond nuit</text><text x="92" y="160">#221E17</text>
+    <rect x="164" y="64" width="112" height="84" rx="12" fill="#4FC3B2"/>
+    <text x="220" y="140" font-weight="600" fill="#1B2622">Turquoise nuit</text><text x="220" y="160" fill="#1B2622">Action</text>
+    <rect x="292" y="64" width="112" height="84" rx="12" fill="#6FD1C3"/>
+    <text x="348" y="140" font-weight="600" fill="#1B2622">Turquoise clair</text><text x="348" y="160" fill="#1B2622">Succès / hover</text>
+    <rect x="420" y="64" width="112" height="84" rx="12" fill="#F0967F"/>
+    <text x="476" y="140" font-weight="600" fill="#2A1B15">Corail nuit</text><text x="476" y="160" fill="#2A1B15">Accent / focus</text>
+    <rect x="548" y="64" width="112" height="84" rx="12" fill="#FFD98A"/>
+    <text x="604" y="140" font-weight="600" fill="#2A2214">Jaune doux</text><text x="604" y="160" fill="#2A2214">Étape en cours</text>
+    <rect x="36" y="168" width="112" height="48" rx="10" fill="#F2E9DA"/>
+    <text x="92" y="197" fill="#221E17" font-weight="600">Texte</text>
+    <rect x="164" y="168" width="112" height="48" rx="10" fill="#B7AB94"/>
+    <text x="220" y="197" fill="#221E17" font-weight="600">Texte secondaire</text>
+    <rect x="292" y="168" width="112" height="48" rx="10" fill="#3A352C"/>
+    <text x="348" y="197" fill="#F2E9DA" font-weight="600">Bordures</text>
+    <rect x="420" y="168" width="240" height="48" rx="10" fill="#2C271E"/>
+    <text x="540" y="197" font-weight="600">Cartes / fond alterné</text>
+  </g>
+</svg>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title data-i18n="app.title">Goblin Tools — édition locale</title>
+  <title data-i18n="app.title">Une Étape à la Fois</title>
   <link rel="stylesheet" href="/style.css" />
   <link rel="stylesheet" href="/spice/spice.css" />
   <link rel="stylesheet" href="/magic-todo/magic-todo.css" />
@@ -16,7 +16,7 @@
       var saved = localStorage.getItem("gt_theme");
       var theme = saved === "light" || saved === "dark"
         ? saved
-        : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        : "light";
       document.documentElement.setAttribute("data-theme", theme);
     })();
   </script>
@@ -24,15 +24,24 @@
 <body>
   <header class="topbar">
     <a href="#/" class="brand">
-      <span class="logo">👺</span>
-      <span class="brand-text">Goblin Tools<span class="brand-sub">local</span></span>
+      <img class="logo" src="/assets/logo-une-étape-à-la-fois-svg.png" alt="Une Étape à la Fois" width="34" height="34" />
+      <span class="brand-text">Une Étape à la Fois<span class="brand-sub">local</span></span>
     </a>
+    <span id="nav-greeting" class="nav-greeting"></span>
     <nav class="nav">
       <button type="button" id="theme-toggle" class="theme-toggle" title="Passer au mode sombre" aria-label="Passer au mode sombre" aria-pressed="false">🌙</button>
-      <button type="button" id="lang-toggle" class="theme-toggle" title="Passer en anglais" aria-label="Passer en anglais" aria-pressed="false">🇫🇷</button>
+      <select id="lang-select" class="lang-select" aria-label="Langue">
+        <option value="fr">🇫🇷 Français</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="it">🇮🇹 Italiano</option>
+        <option value="zh">🇨🇳 中文</option>
+        <option value="ja">🇯🇵 日本語</option>
+        <option value="ru">🇷🇺 Русский</option>
+      </select>
       <span id="ai-status" class="ai-status" title="Statut du fournisseur IA" aria-label="Statut du fournisseur IA">●</span>
       <a href="#/history" data-i18n-attr="title|app.nav.history" title="Historique">🕘</a>
-      <a href="#/assistant" data-i18n-attr="title|app.nav.assistant" title="Second cerveau">🧠</a>
       <a href="#/settings" data-i18n-attr="title|app.nav.settings" title="Réglages">⚙️</a>
       <a href="#/account" data-i18n-attr="title|app.nav.account" title="Compte">👤</a>
     </nav>

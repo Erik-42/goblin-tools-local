@@ -1,4 +1,9 @@
-"""Thin async client for any OpenAI-compatible chat-completions endpoint."""
+"""Thin async client for any OpenAI-compatible chat-completions endpoint.
+
+Quand le fournisseur est "local" (moteur llama-server bundle), les appels
+visent l'instance locale lancee par le gestionnaire server/local_llm/manager.py.
+Les balises de raisonnement (think) sont retirees defensivement des reponses.
+"""
 import asyncio
 import json
 import re
@@ -7,6 +12,45 @@ import time
 import httpx
 
 from . import local_ai, settings_store
+from .local_llm.manager import get_manager
+
+# Moteur local bundle (llama-server + Qwen3 4B Q4_K_M).
+LOCAL_ENGINE_MODEL = "qwen3-4b-q4_k_m"
+DEFAULT_LOCAL_HOST = "127.0.0.1"
+DEFAULT_LOCAL_PORT = 8766
+
+
+def _provider(settings: dict) -> str:
+    """Provenance de l'IA : "local" (moteur bundle) ou "external" (API distante)."""
+    return str(settings.get("provider") or "external").strip().lower()
+
+
+def _local_endpoint(settings: dict) -> dict:
+    """Endpoint du moteur local bundle (llama-server)."""
+    return {
+        "base_url": f"http://{DEFAULT_LOCAL_HOST}:{DEFAULT_LOCAL_PORT}/v1",
+        "api_key": settings.get("api_key") or "",
+        "model": settings.get("model") or LOCAL_ENGINE_MODEL,
+        "fallback": "",
+        "alternates": [],
+        "source": "local",
+        "loaded": "",
+        "primary": LOCAL_ENGINE_MODEL,
+        "ai_mode": "local",
+    }
+
+
+_THINK_BLOCK = re.compile(r"```[\s\S]*?```", re.S)
+_THINKING_BLOCK = re.compile(r"<thinking>.*?</thinking>\s*", re.S | re.I)
+_THINK_TRAILING = re.compile(r"\s*\bthink\b\s*$", re.I)
+
+
+def _strip_think_tags(text: str) -> str:
+    """Retire defensivement les balises de raisonnement d'une reponse locale."""
+    text = _THINK_BLOCK.sub("", text or "")
+    text = _THINKING_BLOCK.sub("", text)
+    text = _THINK_TRAILING.sub("", text)
+    return text.strip()
 
 
 class LLMNotConfigured(Exception):
@@ -84,16 +128,16 @@ async def _post_ollama_with_retry(endpoint: dict, system: str, user: str, temper
 
 async def _post_openai(endpoint: dict, system: str, user: str, temperature: float, want_json: bool) -> str:
     api_key = endpoint.get("api_key") or ""
-    if not api_key:
+    if not api_key and endpoint.get("source") != "local":
         raise LLMNotConfigured(
-            "Aucune clé API. Ouvre « Réglages » et renseigne l'URL de base, la clé API et le nom du modèle."
+            "Aucune cle API. Ouvre « Reglages » et renseigne l'URL de base, la cle API et le nom du modele."
         )
 
     base = str(endpoint["base_url"]).rstrip("/")
     url = f"{base}/chat/completions"
     system_content = system
     if want_json:
-        system_content = system + "\nRéponds uniquement avec un objet JSON valide, sans texte autour."
+        system_content = system + "\nReponds uniquement avec un objet JSON valide, sans texte autour."
 
     payload = {
         "model": endpoint["model"],
@@ -103,16 +147,18 @@ async def _post_openai(endpoint: dict, system: str, user: str, temperature: floa
         ],
         "temperature": temperature,
     }
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
 
     try:
         async with httpx.AsyncClient(timeout=120) as client:
             resp = await client.post(url, json=payload, headers=headers)
     except httpx.HTTPError as exc:
-        raise LLMError(f"Impossible de joindre l'API du modèle : {exc}") from exc
+        raise LLMError(f"Impossible de joindre l'API du modele : {exc}") from exc
 
     if resp.status_code != 200:
-        raise LLMError(f"L'API du modèle a répondu {resp.status_code} : {resp.text[:300]}")
+        raise LLMError(f"L'API du modele a repondu {resp.status_code} : {resp.text[:300]}")
 
     try:
         data = resp.json()
@@ -121,11 +167,13 @@ async def _post_openai(endpoint: dict, system: str, user: str, temperature: floa
         if not content.strip():
             content = message.get("reasoning") or message.get("thinking") or ""
     except (ValueError, KeyError, IndexError, TypeError) as exc:
-        raise LLMError(f"Format de réponse inattendu : {resp.text[:300]}") from exc
+        raise LLMError(f"Format de reponse inattendu : {resp.text[:300]}") from exc
 
     text = (content or "").strip()
+    if endpoint.get("source") == "local":
+        text = _strip_think_tags(text)
     if not text:
-        raise LLMError(f"Le modèle {endpoint.get('model')} a renvoyé une réponse vide.")
+        raise LLMError(f"Le modele {endpoint.get('model')} a renvoie une reponse vide.")
     return text
 
 
@@ -170,6 +218,20 @@ async def health(settings: dict) -> dict:
     if _health_cache["status"] is not None and now - _health_cache["ts"] < HEALTH_TTL:
         return _health_cache["status"]
 
+    if _provider(settings) == "local":
+        # Moteur local bundle : on s'appuie sur le gestionnaire et on probe l'URL sante.
+        manager = get_manager()
+        ready = manager.status().get("ready", False)
+        try:
+            ok = await probe(f"http://{manager.host}:{manager.port}{HEALTH_PATH}", timeout=2.0)
+        except Exception:
+            ok = ready
+        status = "local" if ok else "offline"
+        result = {"status": status, "provider": "local", "mode": "local"}
+        _health_cache["status"] = result
+        _health_cache["ts"] = now
+        return result
+
     amode = local_ai.ai_mode(settings)
     endpoint = local_ai.resolve(settings)
     base = endpoint.get("base_url", "")
@@ -206,21 +268,24 @@ async def health(settings: dict) -> dict:
 
 async def chat(system: str, user: str, temperature: float = 0.7, want_json: bool = False) -> str:
     settings = settings_store.load()
-    amode = local_ai.ai_mode(settings)
-    endpoint = local_ai.resolve(settings)
+    if _provider(settings) == "local":
+        endpoint = _local_endpoint(settings)
+    else:
+        amode = local_ai.ai_mode(settings)
+        endpoint = local_ai.resolve(settings)
 
-    # Auto mode : bascule silencieuse vers le local si le distant est injoignable.
-    if amode == "auto" and not local_ai.is_local_endpoint(endpoint.get("base_url", "")):
-        reachable = await probe(endpoint.get("base_url", ""))
-        if not reachable:
-            settings = {**settings, "ai_mode": "local"}
-            endpoint = local_ai.resolve(settings)
+        # Auto mode : bascule silencieuse vers le local si le distant est injoignable.
+        if amode == "auto" and not local_ai.is_local_endpoint(endpoint.get("base_url", "")):
+            reachable = await probe(endpoint.get("base_url", ""))
+            if not reachable:
+                settings = {**settings, "ai_mode": "local"}
+                endpoint = local_ai.resolve(settings)
 
     if not (endpoint.get("api_key") or settings.get("api_key")) and not _is_ollama(
         str(endpoint.get("base_url") or "")
     ):
         raise LLMNotConfigured(
-            "Aucune clé API. Ouvre « Réglages » et renseigne l'URL de base, la clé API et le nom du modèle."
+            "Aucune cle API. Ouvre « Reglages » et renseigne l'URL de base, la cle API et le nom du modele."
         )
 
     models = []
