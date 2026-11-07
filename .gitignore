@@ -7,6 +7,11 @@ goblin-settings.json
 server/settings.json
 .env
 
+# Moteur et modèle locaux IA (téléchargés au premier lancement)
+server/local_llm/engine/
+server/local_llm/models/
+.data/
+
 # Artefacts PyInstaller
 build/
 dist/

@@ -31,7 +31,7 @@ DEFAULT_CORS_ORIGINS = _env("GOBLIN_CORS_ORIGINS", "")
 DEFAULT_AI_MODE = _env("GOBLIN_AI_MODE", "auto")       # distant | local | auto
 
 # Provenance de l'IA : "local" (moteur llama-server bundle) ou "external" (API distante).
-DEFAULT_PROVIDER = _env("GOBLIN_LLM_PROVIDER", "external")  # local | external
+DEFAULT_PROVIDER = _env("GOBLIN_LLM_PROVIDER", "local")  # local | external
 
 # Clés persistables. port est converti en int à la lecture.
 _SETTING_KEYS = (

@@ -39,7 +39,7 @@ _register(
         os="linux",
         arch="x86_64",
         binary_name="llama-server",
-        asset_pattern="llama-server-linux-x64",
+        asset_pattern="llama-{version}-bin-ubuntu-x64.tar.gz",
         build="cpu",
     ),
 )
@@ -77,12 +77,13 @@ def engine_download_url(version: str, spec: PlatformSpec) -> str:
     """URL de l'asset binaire llama-server sur une release GitHub de llama.cpp.
 
     Le nom exact de l'asset n'est pas code en dur : on construit l'URL a
-    partir du motif d'asset de la plateforme et on sélectionne l'asset
-    correspondant au téléchargement (voir downloader / manager).
+    partir du motif d'asset de la plateforme (qui peut contenir un
+    placeholder ``{version}``) et du tag de release demande.
     """
+    filename = spec.asset_pattern.format(version=version)
     return (
         f"https://github.com/ggml-org/llama.cpp/releases/download/"
-        f"{version}/{spec.asset_pattern}"
+        f"{version}/{filename}"
     )
 
 

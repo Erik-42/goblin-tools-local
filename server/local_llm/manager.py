@@ -235,6 +235,46 @@ class LocalLLMManager:
     def _engine_ready(self) -> bool:
         return self.engine_path.exists() and self.model_path.exists()
 
+    def _extract_engine_archive(self, archive_path: str) -> None:
+        """Extrait le binaire llama-server depuis une archive .tar.gz."""
+        import tarfile
+        import shutil
+
+        extract_dir = self.engine_dir / "_extract_tmp"
+        extract_dir.mkdir(parents=True, exist_ok=True)
+
+        try:
+            with tarfile.open(archive_path, "r:gz") as tar:
+                try:
+                    tar.extractall(extract_dir, filter="data")
+                except TypeError:
+                    tar.extractall(extract_dir)
+
+            # Chercher le binaire llama-server dans l'arborescence extraite
+            binary_name = engine_binary_name(self._platform_spec())
+            found: Optional[Path] = None
+            for root, _dirs, files in os.walk(extract_dir):
+                for fname in files:
+                    if fname == binary_name:
+                        found = Path(root) / fname
+                        break
+                if found is not None:
+                    break
+
+            if found is None:
+                raise RuntimeError(
+                    f"Binaire {binary_name} introuvable dans l'archive"
+                )
+
+            # Déplacer vers l'emplacement final
+            self.engine_dir.mkdir(parents=True, exist_ok=True)
+            os.replace(str(found), str(self.engine_path))
+        finally:
+            try:
+                shutil.rmtree(extract_dir)
+            except OSError:
+                pass
+
     def _run_install(self) -> None:
         """Flot d'installation complet (execute dans le fil d'arriere-plan)."""
         try:
@@ -262,12 +302,19 @@ class LocalLLMManager:
                         self.progress = p
 
                 try:
-                    download(url, str(self.engine_path), progress_cb=on_engine_progress)
+                    archive_path = str(self.engine_dir / "llama-server.tar.gz")
+                    download(url, archive_path, progress_cb=on_engine_progress)
+                    self._extract_engine_archive(archive_path)
+                    try:
+                        os.remove(archive_path)
+                    except OSError:
+                        pass
                 except DownloadError as exc:
                     raise RuntimeError(
                         "Impossible de telecharger le binaire llama-server depuis GitHub. "
                         "Fournissez un binaire compile via GOBLIN_LLAMA_BIN."
                     ) from exc
+
                 try:
                     os.chmod(self.engine_path, 0o755)
                 except OSError:
@@ -450,7 +497,7 @@ def get_manager(data_dir: Optional[Path] = None) -> LocalLLMManager:
     if _manager is None:
         if data_dir is None:
             # import differe pour eviter une boucle au chargement du module
-            from .paths import DATA_DIR
+            from ..paths import DATA_DIR
 
             data_dir = DATA_DIR
         _manager = LocalLLMManager(data_dir=data_dir)

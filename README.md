@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🪨 Une Étape à la Fois
+# 🪨 Une Étape à la Fois !
 
-![Bannière](assets/bannière-github-une-étape-à-la-fois-svg-1280×320.svg)
+![Bannière](assets/bannière-github-1280×320.png)
 
 **Trop grand, trop flou, pas envie ? L'IA te montre juste la prochaine étape.**
 
@@ -88,6 +88,42 @@ compatible OpenAI → « Tester la connexion » → c'est prêt.
 
 *N'importe quel serveur compatible OpenAI fonctionne — y compris un modèle tournant
 sur votre propre machine (Ollama, LM Studio), pour un fonctionnement entièrement hors ligne.*
+
+### Option 3 : mode local autonome (0 €, 0 réseau)
+
+Si vous ne voulez **aucun appel externe**, activez le **mode local** : l'application
+télécharge elle-même un petit moteur (`llama.cpp`) et un modèle GGUF (Qwen3 4B),
+puis les lance sur votre machine. Rien ne sort, jamais.
+
+```bash
+# Démarrage
+python run.py          # → http://127.0.0.1:8765
+```
+
+1. Ouvrez <http://127.0.0.1:8765> → ⚙️ en haut à droite → **Réglages**.
+2. Dans « Fournisseur IA », choisissez **local**.
+3. Cliquez sur **« Installer le moteur local »** (ou attendez que cela se fasse
+   automatiquement au premier lancement si le moteur et le modèle sont déjà présents).
+4. Le voyant passe du orange (chargement) au vert (prêt) — les 9 outils sont alors
+   disponibles, 100 % hors ligne.
+
+**Pour un fonctionnement entièrement hors ligne** (pas d'accès internet),
+fournissez les fichiers manuellement :
+
+| Variable | À définir | Exemple |
+|---|---|---|
+| `GOBLIN_LLAMA_BIN` | Chemin du binaire `llama-server` déjà compilé | `/opt/llama-server` |
+| `GOBLIN_MODEL_PATH` | Chemin du fichier `.gguf` déjà présent | `/opt/Qwen3-4B-Q4_K_M.gguf` |
+| `GOBLIN_LLAMA_VERSION` | Tag de la version de `llama.cpp` utilisée | `b12110` |
+
+Le répertoire de données (`~/.local/share/goblin-tools/`) contient alors :
+`engine/llama-server` (binaire) et `models/Qwen3-4B-Q4_K_M.gguf` (~2,5 Go).
+
+> **Installation manuelle hors ligne** : téléchargez
+> `llama-b12110-bin-ubuntu-x64.tar.gz` depuis les [releases de llama.cpp](https://github.com/ggml-org/llama.cpp/releases/tag/b12110)
+> et `Qwen3-4B-Q4_K_M.gguf` depuis [Hugging Face](https://huggingface.co/Qwen/Qwen3-4B-GGUF),
+> puis placez-les aux emplacements indiqués ci-dessus (ou utilisez les variables
+> d'environnement). Aucun appel réseau n'est alors effectué.
 
 ## 🔒 Confidentialité
 

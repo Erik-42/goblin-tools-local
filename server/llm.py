@@ -12,7 +12,7 @@ import time
 import httpx
 
 from . import local_ai, settings_store
-from .local_llm.manager import get_manager
+from .local_llm.manager import get_manager, HEALTH_PATH
 
 # Moteur local bundle (llama-server + Qwen3 4B Q4_K_M).
 LOCAL_ENGINE_MODEL = "qwen3-4b-q4_k_m"

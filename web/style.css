@@ -71,7 +71,7 @@ code {
   border-bottom: 2px solid var(--border);
 }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; color: var(--ink); }
-.brand .logo { width: 34px; height: 34px; flex-shrink: 0; }
+.brand .logo { width: 34px; height: auto; flex-shrink: 0; }
 .brand-sub { margin-left: 8px; font-size: 0.7rem; font-weight: 600; color: var(--green-dark); background: var(--green-light); padding: 2px 8px; border-radius: 999px; vertical-align: middle; }
 .nav { display: flex; align-items: center; gap: 6px; }
 .nav a { font-size: 1.3rem; padding: 6px 10px; border-radius: 10px; }

@@ -15,7 +15,7 @@ from typing import Final
 # Version de llama.cpp testee avec ce catalogue. Elle peut etre surchargee
 # par la variable d environnement GOBLIN_LLAMA_VERSION (installation hors
 # ligne avec un binaire deja present, voir manager.py).
-LLAMA_VERSION: Final[str] = os.environ.get("GOBLIN_LLAMA_VERSION", "b4462")
+LLAMA_VERSION: Final[str] = os.environ.get("GOBLIN_LLAMA_VERSION", "b12110")
 
 
 @dataclass(frozen=True)
