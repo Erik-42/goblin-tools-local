@@ -148,7 +148,8 @@
 
 .magic-todo__handle { cursor: grab; color: var(--muted); }
 
-.magic-todo__time, .magic-todo__deadline { color: var(--muted); font-size: 0.85rem; }
+.magic-todo__time { color: var(--muted); font-size: 0.85rem; cursor: pointer; }
+.magic-todo__deadline { color: var(--muted); font-size: 0.85rem; }
 
 .magic-todo__icon { padding: 4px 8px; }
 
